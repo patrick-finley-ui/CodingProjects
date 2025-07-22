@@ -1,5 +1,11 @@
-// Sample audit data
-const initialAuditData = [
+// Global variables
+let auditData = [];
+let filteredData = [];
+let currentIssue = null;
+let deregisterAuditData = null;
+
+// Dummy data for fallback
+const dummyData = [
     {
         id: "MIPR-AI020-2025",
         issueType: "Missing Link",
@@ -38,11 +44,6 @@ const initialAuditData = [
     }
 ];
 
-// Global variables
-let auditData = [...initialAuditData];
-let filteredData = [...auditData];
-let currentIssue = null;
-
 // DOM elements
 const searchInput = document.getElementById('searchInput');
 const severityFilter = document.getElementById('severityFilter');
@@ -55,10 +56,58 @@ const modal = document.getElementById('issueModal');
 const closeModal = document.querySelector('.close');
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    renderTable();
-    setupEventListeners();
-});
+async function init() {
+    try {
+        // Get initial audit data from UiPath variable (as string)
+        const initialDataString = await App.getVariable('auditData');
+        
+        // Parse the string data or use dummy data if empty/invalid
+        if (initialDataString && initialDataString.trim() !== '') {
+            try {
+                const parsedData = JSON.parse(initialDataString);
+                auditData = Array.isArray(parsedData) ? parsedData : dummyData;
+            } catch (parseError) {
+                console.log("Error parsing audit data JSON, using dummy data:", parseError);
+                auditData = dummyData;
+            }
+        } else {
+            console.log("No audit data provided, using dummy data");
+            auditData = dummyData;
+        }
+        
+        filteredData = [...auditData];
+        
+        // Set up variable change listener
+        deregisterAuditData = App.onVariableChange('auditData', async (newValue) => {
+            if (newValue && newValue.trim() !== '') {
+                try {
+                    const parsedData = JSON.parse(newValue);
+                    auditData = Array.isArray(parsedData) ? parsedData : dummyData;
+                } catch (parseError) {
+                    console.log("Error parsing updated audit data JSON:", parseError);
+                    auditData = dummyData;
+                }
+            } else {
+                auditData = dummyData;
+            }
+            filteredData = [...auditData];
+            renderTable();
+        });
+        
+        renderTable();
+        setupEventListeners();
+    } catch (e) {
+        console.log("Error initializing audit data:", e);
+        // Fallback to dummy data if variable doesn't exist or other error
+        auditData = dummyData;
+        filteredData = [...auditData];
+        renderTable();
+        setupEventListeners();
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
 
 // Setup event listeners
 function setupEventListeners() {
@@ -200,7 +249,7 @@ function getResolutionBadgeClass(resolution) {
 }
 
 // Update resolution
-function updateResolution(id, newResolution) {
+async function updateResolution(id, newResolution) {
     const item = auditData.find(item => item.id === id);
     if (item) {
         item.resolution = newResolution;
@@ -209,6 +258,14 @@ function updateResolution(id, newResolution) {
         if (filteredItem) {
             filteredItem.resolution = newResolution;
         }
+        
+        // Update UiPath variable
+        try {
+            await App.setVariable('auditData', JSON.stringify(auditData));
+        } catch (e) {
+            console.log("Error updating audit data variable:", e);
+        }
+        
         renderTable();
     }
 }
@@ -230,7 +287,7 @@ function openModal(id) {
 }
 
 // Close modal
-function closeModalHandler() {
+async function closeModalHandler() {
     modal.style.display = 'none';
     if (currentIssue) {
         // Save notes when closing modal
@@ -249,12 +306,19 @@ function closeModalHandler() {
             filteredItem.notes = notes;
         }
         
+        // Update UiPath variable
+        try {
+            await App.setVariable('auditData', JSON.stringify(auditData));
+        } catch (e) {
+            console.log("Error updating audit data variable:", e);
+        }
+        
         currentIssue = null;
     }
 }
 
 // Handle modal resolution change
-document.getElementById('modalResolution').addEventListener('change', function() {
+document.getElementById('modalResolution').addEventListener('change', async function() {
     if (currentIssue) {
         const newResolution = this.value;
         currentIssue.resolution = newResolution;
@@ -269,6 +333,13 @@ document.getElementById('modalResolution').addEventListener('change', function()
         const filteredItem = filteredData.find(item => item.id === currentIssue.id);
         if (filteredItem) {
             filteredItem.resolution = newResolution;
+        }
+        
+        // Update UiPath variable
+        try {
+            await App.setVariable('auditData', JSON.stringify(auditData));
+        } catch (e) {
+            console.log("Error updating audit data variable:", e);
         }
         
         // Re-render the table to reflect changes
@@ -293,10 +364,19 @@ function importData(event) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = async function(e) {
             try {
                 const importedData = JSON.parse(e.target.result);
                 auditData = importedData;
+                filteredData = [...auditData];
+                
+                // Update UiPath variable
+                try {
+                    await App.setVariable('auditData', JSON.stringify(auditData));
+                } catch (e) {
+                    console.log("Error updating audit data variable:", e);
+                }
+                
                 filterData();
             } catch (error) {
                 alert('Error importing data. Please check the file format.');
@@ -304,4 +384,14 @@ function importData(event) {
         };
         reader.readAsText(file);
     }
-} 
+}
+
+// Cleanup function to deregister variable listeners
+function cleanup() {
+    if (deregisterAuditData) {
+        deregisterAuditData();
+    }
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', cleanup); 
