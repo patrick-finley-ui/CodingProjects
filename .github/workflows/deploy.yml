@@ -71,3 +71,12 @@ jobs:
           echo "❌ Deployment failed!"
           exit 1
         fi 
+
+    - name: Success notification
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "📊 Repository: ${{ github.repository }}"
+        echo "📊 Branch: ${{ github.ref_name }}"
+        echo "📊 Commit: ${{ github.sha }}"
+        echo "📊 Author: ${{ github.actor }}"
+        echo "📊 Files Changed:"
