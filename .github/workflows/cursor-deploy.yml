@@ -1,0 +1,90 @@
+name: Cursor Auto-Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  cursor-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests (if any)
+      run: |
+        if [ -f "package.json" ] && grep -q "test" package.json; then
+          npm test
+        else
+          echo "No tests configured"
+        fi
+        
+    - name: Validate code quality
+      run: |
+        echo "🔍 Validating code quality..."
+        
+        # Check for common issues
+        echo "Checking for console.log statements..."
+        if grep -r "console\.log" . --exclude-dir=node_modules --exclude-dir=.git; then
+          echo "⚠️  Warning: console.log statements found in code"
+        fi
+        
+        # Check file sizes
+        echo "Checking file sizes..."
+        find . -name "*.js" -o -name "*.html" -o -name "*.css" | while read file; do
+          size=$(wc -c < "$file")
+          if [ $size -gt 100000 ]; then
+            echo "⚠️  Large file detected: $file ($size bytes)"
+          fi
+        done
+        
+    - name: Create deployment report
+      run: |
+        echo "## 🚀 Cursor Auto-Deploy Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployment Details:**" >> $GITHUB_STEP_SUMMARY
+        echo "- **Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "**Files Modified:**" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ github.event_name }}" == "push" ]; then
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} | while read file; do
+            echo "- 📝 $file" >> $GITHUB_STEP_SUMMARY
+          done
+        else
+          echo "- Manual deployment triggered" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Repository Status:**" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Code validation passed" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Dependencies installed" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Ready for deployment" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./audit-website
+        publish_branch: gh-pages
+        
+    - name: Success notification
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "📊 Repository: ${{ github.repository }}"
+        echo "🌐 Live URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" 

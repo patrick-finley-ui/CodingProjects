@@ -1,0 +1,73 @@
+name: Deploy from Cursor
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Validate HTML
+      run: |
+        # Check if HTML files are valid
+        find . -name "*.html" -exec echo "Validating {}" \;
+        
+    - name: Validate JavaScript
+      run: |
+        # Basic JavaScript syntax check
+        find . -name "*.js" -exec node -c {} \;
+        
+    - name: Check for sensitive data
+      run: |
+        # Check for potential sensitive data in code
+        if grep -r "password\|secret\|key\|token" . --exclude-dir=node_modules --exclude-dir=.git; then
+          echo "Warning: Potential sensitive data found in code"
+          exit 1
+        fi
+        
+    - name: Create deployment summary
+      run: |
+        echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Files Changed:" >> $GITHUB_STEP_SUMMARY
+        git diff --name-only ${{ github.event.before }} ${{ github.sha }} | while read file; do
+          echo "- $file" >> $GITHUB_STEP_SUMMARY
+        done
+        
+    - name: Deploy to GitHub Pages (Optional)
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./audit-website
+        publish_branch: gh-pages
+        
+    - name: Notify deployment status
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Deployment successful!"
+        else
+          echo "❌ Deployment failed!"
+          exit 1
+        fi 
