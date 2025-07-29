@@ -55,6 +55,14 @@
                     </div>
                 </div>
 
+                <!-- Table Header with Refresh Button -->
+                <div class="table-header">
+                    <h3>Audit Findings</h3>
+                    <button onclick="refreshAuditData()" class="refresh-button">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                </div>
+                
                 <!-- Table -->
                 <div class="table-container">
                     <table id="auditTable">
@@ -90,36 +98,68 @@
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
-                <div class="detail-grid">
-                    <div class="detail-label">Transaction ID:</div>
-                    <div id="modalId" class="detail-value"></div>
-                    
-                    <div class="detail-label">Issue Type:</div>
-                    <div id="modalIssueType" class="detail-value"></div>
-                    
-                    <div class="detail-label">Severity:</div>
-                    <div id="modalSeverity" class="detail-value"></div>
-                    
-                    <div class="detail-label">Description:</div>
-                    <div id="modalDescription" class="detail-value"></div>
-                    
-                    <div class="detail-label">Recommended Action:</div>
-                    <div id="modalRecommendedAction" class="detail-value"></div>
-                    
-                    <div class="detail-label">Resolution:</div>
-                    <div class="detail-value">
-                        <select id="modalResolution" class="resolution-select">
-                            <option value="Resolved">Resolved</option>
-                            <option value="Not Resolved">Not Resolved</option>
-                            <option value="In Progress">In Progress</option>
-                        </select>
+                <form id="issueForm">
+                    <div class="detail-grid">
+                        <div class="detail-label">Transaction ID:</div>
+                        <div id="modalId" class="detail-value"></div>
+                        
+                        <div class="detail-label">Issue Type:</div>
+                        <div id="modalIssueType" class="detail-value"></div>
+                        
+                        <div class="detail-label">Severity:</div>
+                        <div id="modalSeverity" class="detail-value"></div>
+                        
+                        <div class="detail-label">Description:</div>
+                        <div id="modalDescription" class="detail-value"></div>
+                        
+                        <div class="detail-label">Recommended Action:</div>
+                        <div id="modalRecommendedAction" class="detail-value"></div>
+                        
+                        <div class="detail-label">Resolution Action: <span class="required">*</span></div>
+                        <div class="detail-value">
+                            <select id="modalResolutionAction" class="resolution-action-select" required>
+                                <option value="">Select Resolution Action</option>
+                                <optgroup label="🤖 Automated Resolutions">
+                                    <option value="clarifyVendor">Request clarification from vendor</option>
+                                    <option value="resubmitInvoice">Request invoice resubmission</option>
+                                    <option value="rejectInvoice">Reject invoice</option>
+                                    <option value="reconcileLineItems">Perform line item reconciliation</option>
+                                    <option value="checkReceivingReports">Review receiving reports</option>
+                                    <option value="verifyContractTerms">Verify contract terms</option>
+                                    <option value="generateExceptionJustification">Document exception justification</option>
+                                    <option value="prepareDeobligation">Deobligate excess funds</option>
+                                </optgroup>
+                                <optgroup label="👤 Human-in-the-Loop Resolutions">
+                                    <option value="amendPO">Amend the purchase order</option>
+                                    <option value="engageKO">Engage the Contracting Officer (KO)</option>
+                                    <option value="escalateToCOR">Escalate to Program Office or COR</option>
+                                    <option value="reallocateFunds">Initiate funds reallocation or modification</option>
+                                    <option value="controlReview">Flag for internal control review</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        
+                        <div class="detail-label">Complete? <span class="required">*</span></div>
+                        <div class="detail-value">
+                            <select id="modalComplete" class="complete-select" required>
+                                <option value="">Select completion status</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                                <option value="In Progress">In Progress</option>
+                            </select>
+                        </div>
+                        
+                        <div class="detail-label">Notes:</div>
+                        <div class="detail-value">
+                            <textarea id="modalNotes" class="notes-textarea" placeholder="Add your notes here..."></textarea>
+                        </div>
                     </div>
                     
-                    <div class="detail-label">Notes:</div>
-                    <div class="detail-value">
-                        <textarea id="modalNotes" class="notes-textarea" placeholder="Add your notes here..."></textarea>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary">Submit Resolution</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModalHandler()">Cancel</button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>

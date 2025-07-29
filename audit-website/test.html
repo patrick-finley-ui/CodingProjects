@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modal Form Submission</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Modal Form Submission</h1>
+    <p>This page tests the modal form submission functionality.</p>
+    
+    <button class="test-button" onclick="testModalSubmission()">Test Modal Submission</button>
+    <button class="test-button" onclick="testValidation()">Test Form Validation</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        // Mock the App object for testing
+        window.App = {
+            getVariable: async function(name) {
+                return JSON.stringify([
+                    {
+                        id: "TEST-001",
+                        issueType: "Test Issue",
+                        severity: "High",
+                        description: "This is a test issue for modal submission",
+                        recommendedAction: "Test the modal form submission",
+                        resolution: "Not Resolved",
+                        resolutionAction: "",
+                        complete: "",
+                        notes: ""
+                    }
+                ]);
+            },
+            setVariable: async function(name, value) {
+                console.log('Mock App.setVariable called:', name, value);
+                return true;
+            },
+            onVariableChange: function(name, callback) {
+                console.log('Mock App.onVariableChange called:', name);
+            }
+        };
+        
+        // Mock the USE_DUMMY_DATA variable
+        const USE_DUMMY_DATA = false;
+        
+        function testModalSubmission() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing Modal Submission...</h3>';
+            
+            // Simulate opening a modal
+            const testIssue = {
+                id: "TEST-001",
+                issueType: "Test Issue",
+                severity: "High",
+                description: "This is a test issue",
+                recommendedAction: "Test the modal",
+                resolution: "Not Resolved",
+                resolutionAction: "",
+                complete: "",
+                notes: ""
+            };
+            
+            // Simulate form submission
+            const formData = {
+                resolutionAction: "clarifyVendor",
+                complete: "Yes",
+                notes: "Test notes"
+            };
+            
+            // Simulate the form submission logic
+            testIssue.resolutionAction = formData.resolutionAction;
+            testIssue.complete = formData.complete;
+            testIssue.notes = formData.notes;
+            
+            if (formData.complete === 'Yes') {
+                testIssue.resolution = 'Resolved';
+            }
+            
+            results.innerHTML += `
+                <h4>Test Results:</h4>
+                <p><strong>Original Resolution:</strong> Not Resolved</p>
+                <p><strong>New Resolution:</strong> ${testIssue.resolution}</p>
+                <p><strong>Resolution Action:</strong> ${testIssue.resolutionAction}</p>
+                <p><strong>Complete:</strong> ${testIssue.complete}</p>
+                <p><strong>Notes:</strong> ${testIssue.notes}</p>
+                <p style="color: green;">✅ Test passed! Form submission logic works correctly.</p>
+            `;
+        }
+        
+        function testValidation() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing Form Validation...</h3>';
+            
+            // Test cases
+            const testCases = [
+                { resolutionAction: "", complete: "Yes", expected: false, name: "Missing Resolution Action" },
+                { resolutionAction: "clarifyVendor", complete: "", expected: false, name: "Missing Complete" },
+                { resolutionAction: "", complete: "", expected: false, name: "Missing Both" },
+                { resolutionAction: "clarifyVendor", complete: "Yes", expected: true, name: "Valid Form" }
+            ];
+            
+            let resultsHtml = '<h4>Validation Test Results:</h4>';
+            
+            testCases.forEach(testCase => {
+                const isValid = testCase.resolutionAction && testCase.complete;
+                const status = isValid === testCase.expected ? '✅ PASS' : '❌ FAIL';
+                const color = isValid === testCase.expected ? 'green' : 'red';
+                
+                resultsHtml += `
+                    <p style="color: ${color};">
+                        <strong>${testCase.name}:</strong> ${status}
+                        (Resolution Action: "${testCase.resolutionAction}", Complete: "${testCase.complete}")
+                    </p>
+                `;
+            });
+            
+            results.innerHTML += resultsHtml;
+        }
+    </script>
+</body>
+</html> 

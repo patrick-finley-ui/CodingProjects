@@ -1,0 +1,189 @@
+/* Main Layout */
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Typography */
+h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+h2 {
+    color: #495057;
+    margin-bottom: 15px;
+}
+
+/* Variable Header */
+.variable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.variable-header h2 {
+    margin: 0;
+}
+
+.refresh-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.refresh-button:hover {
+    background-color: #0056b3;
+}
+
+.refresh-button:active {
+    background-color: #004085;
+}
+
+/* Variable Display */
+.variable-display {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Status Indicators */
+.status {
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-weight: bold;
+}
+
+.status.loading {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.status.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Debug Panel */
+.debug-panel {
+    background-color: #e9ecef;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.debug-panel h3 {
+    margin-top: 0;
+    color: #495057;
+    font-size: 16px;
+}
+
+.debug-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+/* Button Styles */
+.debug-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.debug-button:hover {
+    opacity: 0.9;
+}
+
+.debug-button.primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.debug-button.success {
+    background-color: #28a745;
+    color: white;
+}
+
+.debug-button.warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.debug-button.danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        padding: 20px;
+    }
+    
+    .variable-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .refresh-button {
+        width: 100%;
+    }
+    
+    .debug-buttons {
+        flex-direction: column;
+    }
+    
+    .debug-button {
+        width: 100%;
+    }
+    
+    .variable-display {
+        font-size: 12px;
+        padding: 15px;
+    }
+} 

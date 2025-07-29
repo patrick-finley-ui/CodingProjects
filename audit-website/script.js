@@ -1,8 +1,11 @@
 // Global variables
-let auditData = [];
+let localauditData = [];
 let filteredData = [];
 let currentIssue = null;
-let deregisterAuditData = null;
+let deregisterauditData = null;
+
+// Testing boolean - set to true to use dummy data in previews
+const USE_DUMMY_DATA = false;
 
 // Dummy data for fallback
 const dummyData = [
@@ -13,6 +16,8 @@ const dummyData = [
         description: "The MIPR is not linked to any contract in the provided data.",
         recommendedAction: "Investigate why the MIPR is not associated with a contract and ensure proper linkage.",
         resolution: "Not Resolved",
+        resolutionAction: "",
+        complete: "",
         notes: ""
     },
     {
@@ -22,6 +27,8 @@ const dummyData = [
         description: "The contract value ($56,813,981.44) does not match the total invoice amount ($482,437,376.56).",
         recommendedAction: "Review the contract and invoice details to resolve the discrepancy.",
         resolution: "In Progress",
+        resolutionAction: "",
+        complete: "",
         notes: ""
     },
     {
@@ -31,6 +38,8 @@ const dummyData = [
         description: "The invoice total ($482,437,376.56) significantly exceeds the purchase order total ($15,827,239.50).",
         recommendedAction: "Verify the invoice and purchase order details for accuracy and compliance.",
         resolution: "Not Resolved",
+        resolutionAction: "",
+        complete: "",
         notes: ""
     },
     {
@@ -40,6 +49,8 @@ const dummyData = [
         description: "The purchase order references MIPRs (MIPR-AR039-2025, MIPR-MA043-2025) not included in the provided data.",
         recommendedAction: "Locate the missing MIPRs and ensure they are properly documented.",
         resolution: "Resolved",
+        resolutionAction: "",
+        complete: "",
         notes: ""
     }
 ];
@@ -55,59 +66,85 @@ const resultsCount = document.getElementById('resultsCount');
 const modal = document.getElementById('issueModal');
 const closeModal = document.querySelector('.close');
 
+
+
 // Initialize the application
 async function init() {
     try {
-        // Get initial audit data from UiPath variable (as string)
+        // If testing mode is enabled, use dummy data
+        if (USE_DUMMY_DATA) {
+            localauditData = dummyData;
+            filteredData = [...localauditData];
+            renderTable();
+            setupEventListeners();
+            return;
+        }
+        
+        // Check if UiPath App object is available
+        if (typeof App === 'undefined') {
+            throw new Error("UiPath App object not available");
+        }
+        
+        // Get audit data from UiPath variable (as string)
         const initialDataString = await App.getVariable('auditData');
         
         // Parse the string data or use dummy data if empty/invalid
         if (initialDataString && initialDataString.trim() !== '') {
             try {
                 const parsedData = JSON.parse(initialDataString);
-                auditData = Array.isArray(parsedData) ? parsedData : dummyData;
+                localauditData = Array.isArray(parsedData) ? parsedData : dummyData;
             } catch (parseError) {
-                console.log("Error parsing audit data JSON, using dummy data:", parseError);
-                auditData = dummyData;
+                localauditData = dummyData;
             }
         } else {
-            console.log("No audit data provided, using dummy data");
-            auditData = dummyData;
+            localauditData = dummyData;
         }
         
-        filteredData = [...auditData];
+        filteredData = [...localauditData];
         
-        // Set up variable change listener
-        deregisterAuditData = App.onVariableChange('auditData', async (newValue) => {
-            if (newValue && newValue.trim() !== '') {
-                try {
-                    const parsedData = JSON.parse(newValue);
-                    auditData = Array.isArray(parsedData) ? parsedData : dummyData;
-                } catch (parseError) {
-                    console.log("Error parsing updated audit data JSON:", parseError);
-                    auditData = dummyData;
-                }
-            } else {
-                auditData = dummyData;
-            }
-            filteredData = [...auditData];
-            renderTable();
-        });
-        
+        // Render the table with the loaded data
         renderTable();
+        
+        // Setup event listeners
         setupEventListeners();
+        
     } catch (e) {
-        console.log("Error initializing audit data:", e);
         // Fallback to dummy data if variable doesn't exist or other error
-        auditData = dummyData;
-        filteredData = [...auditData];
+        localauditData = dummyData;
+        filteredData = [...localauditData];
         renderTable();
         setupEventListeners();
     }
 }
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', init);
+registerListeners();
+
+// Register listeners function
+async function registerListeners() {
+    // If testing mode is enabled, just initialize with dummy data
+    if (USE_DUMMY_DATA) {
+        init();
+        return;
+    }
+    
+    // Only register UiPath listeners if not in testing mode
+    try {
+        App.onVariableChange('auditData', value => {
+            init();
+        });
+        
+        const data = await App.getVariable('auditData');
+        if (data) {
+            init();
+        } else {
+            init(); // Initialize with dummy data if no UiPath data
+        }
+    } catch (e) {
+        console.log('UiPath App not available, using dummy data');
+        init(); // Initialize with dummy data
+    }
+}
 
 // Setup event listeners
 function setupEventListeners() {
@@ -129,6 +166,92 @@ function setupEventListeners() {
             closeModalHandler();
         }
     });
+    
+    // Form submission
+    document.getElementById('issueForm').addEventListener('submit', handleFormSubmission);
+}
+
+// Handle form submission
+async function handleFormSubmission(event) {
+    event.preventDefault();
+    
+    console.log('Form submission started');
+    
+    if (!currentIssue) {
+        console.error('No current issue found');
+        return;
+    }
+    
+    const resolutionAction = document.getElementById('modalResolutionAction').value;
+    const complete = document.getElementById('modalComplete').value;
+    const notes = document.getElementById('modalNotes').value;
+    
+    console.log('Form values:', { resolutionAction, complete, notes });
+    
+    // Validate required fields
+    if (!resolutionAction || !complete) {
+        alert('Please fill in all required fields (Resolution Action and Complete?)');
+        console.log('Validation failed - missing required fields');
+        return;
+    }
+    
+    console.log('Validation passed, updating data...');
+    
+    // Update the current issue
+    currentIssue.resolutionAction = resolutionAction;
+    currentIssue.complete = complete;
+    currentIssue.notes = notes;
+    
+    // Update resolution based on completion status
+    if (complete === 'Yes') {
+        currentIssue.resolution = 'Resolved';
+    } else if (complete === 'No') {
+        currentIssue.resolution = 'Not Resolved';
+    } else if (complete === 'In Progress') {
+        currentIssue.resolution = 'In Progress';
+    }
+    
+    console.log('Updated current issue:', currentIssue);
+    
+    // Update the main data
+    const item = localauditData.find(item => item.id === currentIssue.id);
+    if (item) {
+        item.resolutionAction = resolutionAction;
+        item.complete = complete;
+        item.notes = notes;
+        item.resolution = currentIssue.resolution;
+        console.log('Updated main data item:', item);
+    }
+    
+    // Update filtered data
+    const filteredItem = filteredData.find(item => item.id === currentIssue.id);
+    if (filteredItem) {
+        filteredItem.resolutionAction = resolutionAction;
+        filteredItem.complete = complete;
+        filteredItem.notes = notes;
+        filteredItem.resolution = currentIssue.resolution;
+        console.log('Updated filtered data item:', filteredItem);
+    }
+    
+    // Update UiPath variable (only if not in testing mode)
+    if (!USE_DUMMY_DATA) {
+        try {
+            await App.setVariable('auditData', JSON.stringify(localauditData));
+            console.log('Updated UiPath variable');
+        } catch (e) {
+            console.error("Error updating audit data variable:", e);
+        }
+    } else {
+        console.log('Testing mode - skipping UiPath variable update');
+    }
+    
+    // Re-render the table to reflect changes
+    renderTable();
+    console.log('Table re-rendered');
+    
+    // Close the modal
+    closeModalHandler();
+    console.log('Modal closed');
 }
 
 // Filter data based on search and filters
@@ -138,7 +261,7 @@ function filterData() {
     const issueTypeValue = issueTypeFilter.value;
     const resolutionValue = resolutionFilter.value;
     
-    filteredData = auditData.filter(item => {
+    filteredData = localauditData.filter(item => {
         const matchesSearch = 
             item.id.toLowerCase().includes(searchTerm) ||
             item.description.toLowerCase().includes(searchTerm);
@@ -189,7 +312,7 @@ function renderTable() {
         tableBody.innerHTML = filteredData.map(item => createTableRow(item)).join('');
     }
     
-    resultsCount.textContent = `Showing ${filteredData.length} of ${auditData.length} audit findings`;
+    resultsCount.textContent = `Showing ${filteredData.length} of ${localauditData.length} audit findings`;
 }
 
 // Create a table row
@@ -207,11 +330,7 @@ function createTableRow(item) {
             <td class="hidden-mobile truncate">${item.description}</td>
             <td class="hidden-desktop truncate">${item.recommendedAction}</td>
             <td>
-                <select class="resolution-select ${resolutionBadgeClass}" onchange="updateResolution('${item.id}', this.value)">
-                    <option value="Resolved" ${item.resolution === 'Resolved' ? 'selected' : ''}>Resolved</option>
-                    <option value="Not Resolved" ${item.resolution === 'Not Resolved' ? 'selected' : ''}>Not Resolved</option>
-                    <option value="In Progress" ${item.resolution === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                </select>
+                <span class="resolution-display ${resolutionBadgeClass}">${item.resolution}</span>
             </td>
             <td>
                 <button class="btn btn-sm" onclick="openModal('${item.id}')">View</button>
@@ -250,7 +369,7 @@ function getResolutionBadgeClass(resolution) {
 
 // Update resolution
 async function updateResolution(id, newResolution) {
-    const item = auditData.find(item => item.id === id);
+    const item = localauditData.find(item => item.id === id);
     if (item) {
         item.resolution = newResolution;
         // Update the filtered data as well
@@ -259,11 +378,11 @@ async function updateResolution(id, newResolution) {
             filteredItem.resolution = newResolution;
         }
         
-        // Update UiPath variable
+        // Update UiPath variable (following UiPath best practices)
         try {
-            await App.setVariable('auditData', JSON.stringify(auditData));
+            await App.setVariable('auditData', JSON.stringify(localauditData));
         } catch (e) {
-            console.log("Error updating audit data variable:", e);
+            console.error("Error updating audit data variable:", e);
         }
         
         renderTable();
@@ -272,17 +391,23 @@ async function updateResolution(id, newResolution) {
 
 // Open modal with issue details
 function openModal(id) {
-    currentIssue = auditData.find(item => item.id === id);
+    console.log('Opening modal for issue:', id);
+    currentIssue = localauditData.find(item => item.id === id);
     if (currentIssue) {
+        console.log('Found current issue:', currentIssue);
         document.getElementById('modalId').textContent = currentIssue.id;
         document.getElementById('modalIssueType').textContent = currentIssue.issueType;
         document.getElementById('modalSeverity').innerHTML = `<span class="badge ${getSeverityBadgeClass(currentIssue.severity)}">${currentIssue.severity}</span>`;
         document.getElementById('modalDescription').textContent = currentIssue.description;
         document.getElementById('modalRecommendedAction').textContent = currentIssue.recommendedAction;
-        document.getElementById('modalResolution').value = currentIssue.resolution;
+        document.getElementById('modalResolutionAction').value = currentIssue.resolutionAction || '';
+        document.getElementById('modalComplete').value = currentIssue.complete || '';
         document.getElementById('modalNotes').value = currentIssue.notes || '';
         
         modal.style.display = 'block';
+        console.log('Modal opened successfully');
+    } else {
+        console.error('Issue not found:', id);
     }
 }
 
@@ -295,7 +420,7 @@ async function closeModalHandler() {
         currentIssue.notes = notes;
         
         // Update the main data
-        const item = auditData.find(item => item.id === currentIssue.id);
+        const item = localauditData.find(item => item.id === currentIssue.id);
         if (item) {
             item.notes = notes;
         }
@@ -306,50 +431,22 @@ async function closeModalHandler() {
             filteredItem.notes = notes;
         }
         
-        // Update UiPath variable
-        try {
-            await App.setVariable('auditData', JSON.stringify(auditData));
-        } catch (e) {
-            console.log("Error updating audit data variable:", e);
+        // Update UiPath variable (only if not in testing mode)
+        if (!USE_DUMMY_DATA) {
+            try {
+                await App.setVariable('auditData', JSON.stringify(localauditData));
+            } catch (e) {
+                console.error("Error updating audit data variable:", e);
+            }
         }
         
         currentIssue = null;
     }
 }
 
-// Handle modal resolution change
-document.getElementById('modalResolution').addEventListener('change', async function() {
-    if (currentIssue) {
-        const newResolution = this.value;
-        currentIssue.resolution = newResolution;
-        
-        // Update the main data
-        const item = auditData.find(item => item.id === currentIssue.id);
-        if (item) {
-            item.resolution = newResolution;
-        }
-        
-        // Update filtered data
-        const filteredItem = filteredData.find(item => item.id === currentIssue.id);
-        if (filteredItem) {
-            filteredItem.resolution = newResolution;
-        }
-        
-        // Update UiPath variable
-        try {
-            await App.setVariable('auditData', JSON.stringify(auditData));
-        } catch (e) {
-            console.log("Error updating audit data variable:", e);
-        }
-        
-        // Re-render the table to reflect changes
-        renderTable();
-    }
-});
-
 // Export data functionality (optional)
 function exportData() {
-    const dataStr = JSON.stringify(auditData, null, 2);
+    const dataStr = JSON.stringify(localauditData, null, 2);
     const dataBlob = new Blob([dataStr], {type: 'application/json'});
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
@@ -367,14 +464,14 @@ function importData(event) {
         reader.onload = async function(e) {
             try {
                 const importedData = JSON.parse(e.target.result);
-                auditData = importedData;
-                filteredData = [...auditData];
+                localauditData = importedData;
+                filteredData = [...localauditData];
                 
-                // Update UiPath variable
+                // Update UiPath variable (following UiPath best practices)
                 try {
-                    await App.setVariable('auditData', JSON.stringify(auditData));
+                    await App.setVariable('auditData', JSON.stringify(localauditData));
                 } catch (e) {
-                    console.log("Error updating audit data variable:", e);
+                    console.error("Error updating audit data variable:", e);
                 }
                 
                 filterData();
@@ -386,12 +483,50 @@ function importData(event) {
     }
 }
 
-// Cleanup function to deregister variable listeners
+// Cleanup function to deregister variable listeners (following UiPath best practices)
 function cleanup() {
-    if (deregisterAuditData) {
-        deregisterAuditData();
+    if (deregisterauditData) {
+        deregisterauditData();
     }
 }
 
-// Cleanup on page unload
-window.addEventListener('beforeunload', cleanup); 
+// Cleanup on page unload (following UiPath best practices)
+window.addEventListener('beforeunload', cleanup);
+
+// Refresh audit data from UiPath
+window.refreshAuditData = async function() {
+    try {
+        // If testing mode is enabled, use dummy data
+        if (USE_DUMMY_DATA) {
+            localauditData = dummyData;
+            filteredData = [...localauditData];
+            renderTable();
+            return;
+        }
+        
+        // Get fresh data from UiPath
+        const freshData = await App.getVariable('auditData');
+        
+        // Parse the fresh data
+        if (freshData && freshData.trim() !== '') {
+            try {
+                const parsedData = JSON.parse(freshData);
+                localauditData = Array.isArray(parsedData) ? parsedData : dummyData;
+            } catch (parseError) {
+                localauditData = dummyData;
+            }
+        } else {
+            localauditData = dummyData;
+        }
+        
+        // Update filtered data and re-render
+        filteredData = [...localauditData];
+        renderTable();
+        
+    } catch (e) {
+        // Fallback to dummy data
+        localauditData = dummyData;
+        filteredData = [...localauditData];
+        renderTable();
+    }
+}; 
