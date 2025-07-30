@@ -58,9 +58,7 @@
                 <!-- Table Header with Refresh Button -->
                 <div class="table-header">
                     <h3>Audit Findings</h3>
-                    <button onclick="refreshAuditData()" class="refresh-button">
-                        <i class="fas fa-sync-alt"></i> Refresh Data
-                    </button>
+                 
                 </div>
                 
                 <!-- Table -->
@@ -119,22 +117,17 @@
                         <div class="detail-value">
                             <select id="modalResolutionAction" class="resolution-action-select" required>
                                 <option value="">Select Resolution Action</option>
-                                <optgroup label="🤖 Automated Resolutions">
+                                <optgroup label="Automated Resolutions">
                                     <option value="clarifyVendor">Request clarification from vendor</option>
                                     <option value="resubmitInvoice">Request invoice resubmission</option>
-                                    <option value="rejectInvoice">Reject invoice</option>
                                     <option value="reconcileLineItems">Perform line item reconciliation</option>
-                                    <option value="checkReceivingReports">Review receiving reports</option>
-                                    <option value="verifyContractTerms">Verify contract terms</option>
                                     <option value="generateExceptionJustification">Document exception justification</option>
                                     <option value="prepareDeobligation">Deobligate excess funds</option>
                                 </optgroup>
-                                <optgroup label="👤 Human-in-the-Loop Resolutions">
+                                <optgroup label="Manual Resolutions">
                                     <option value="amendPO">Amend the purchase order</option>
-                                    <option value="engageKO">Engage the Contracting Officer (KO)</option>
                                     <option value="escalateToCOR">Escalate to Program Office or COR</option>
                                     <option value="reallocateFunds">Initiate funds reallocation or modification</option>
-                                    <option value="controlReview">Flag for internal control review</option>
                                 </optgroup>
                             </select>
                         </div>
