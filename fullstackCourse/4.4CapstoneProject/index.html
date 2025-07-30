@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Resume</title>
+</head>
+
+<body>
+    <header>
+        <div>
+            <img src="/images/patrick-headshot.jpg" alt="Patrick Finley" style="width: 50px; height: 50px; border-radius: 50%;">
+            <span><strong>Patrick Finley</strong></span>
+        </div>
+        <nav>
+            <a href="#bio">Home</a>
+            <a href="#experience">Experience</a>
+            <a href="#education">Education & Skills</a>
+            <a href="#connect">Contact</a>
+        </nav>
+        <button onclick="window.location.href='/resume/Patrick_Finley_Resume.txt';">Download Resume</button>
+    </header>
+
+    <main>
+        <!-- Bio Section -->
+        <section id="bio">
+            <h1>Patrick Finley</h1>
+            <p>
+                I am passionate about automation, AI, and agents, leveraging technology to help organizations modernize work and reduce manual effort.
+            </p>
+            <p>
+                Whether it’s solving problems for the Department of Defense or tracking and optimizing parts of my own life, I’m driven by experimentation, impact, and continuous improvement.
+            </p>
+            <p>
+                <span>Automation</span> | <span>AI</span> | <span>RPA</span>
+            </p>
+            <button onclick="document.getElementById('connect').scrollIntoView();">Contact Me</button>
+        </section>
+
+        <!-- Experience Section -->
+        <section id="experience">
+            <h2>Professional Experience</h2>
+            <ul>
+                <li>
+                    <strong>Sales Engineer II</strong> - UiPath (March 2025 - Present)
+                    <ul>
+                        <li>Designing and presenting automation workflows for the U.S. Air Force.</li>
+                        <li>Driving AI adoption in finance, procurement, and HR sectors.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Solutions Consultant</strong> - Appian (2021-2023)
+                    <ul>
+                        <li>Led a $17M Army account, implementing low-code solutions.</li>
+                        <li>Worked on automation for military logistics and procurement processes.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Education Section -->
+        <section id="education">
+            <h2>Education & Skills</h2>
+            <ul>
+                <li>
+                    <strong>University of Virginia</strong> - B.S. in Systems Engineering and B.A. in Economics, May 2020
+                </li>
+            </ul>
+            <div>
+                <h3>Technical Skills</h3>
+                <ul>
+                    <li>Appian: Advanced</li>
+                    <li>UiPath: Advanced</li>
+                    <li>SQL: Intermediate</li>
+                    <li>Python (Pandas): Intermediate</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="connect">
+            <h2>Contact</h2>
+            <div>
+                <button>Email: patfinley11@gmail.com</button>
+                <button>Phone: (484) 682-9054</button>
+                <button>LinkedIn: <a href="https://linkedin.com">LinkedIn</a></button>
+                <button>GitHub: <a href="https://github.com">GitHub</a></button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 Patrick Finley. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>
