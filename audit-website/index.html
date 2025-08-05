@@ -116,19 +116,14 @@
                         <div class="detail-label">Resolution Action: <span class="required">*</span></div>
                         <div class="detail-value">
                             <select id="modalResolutionAction" class="resolution-action-select" required>
-                                <option value="">Select Resolution Action</option>
-                                <optgroup label="Automated Resolutions">
-                                    <option value="clarifyVendor">Request clarification from vendor</option>
-                                    <option value="resubmitInvoice">Request invoice resubmission</option>
-                                    <option value="reconcileLineItems">Perform line item reconciliation</option>
-                                    <option value="generateExceptionJustification">Document exception justification</option>
-                                    <option value="prepareDeobligation">Deobligate excess funds</option>
-                                </optgroup>
-                                <optgroup label="Manual Resolutions">
-                                    <option value="amendPO">Amend the purchase order</option>
-                                    <option value="escalateToCOR">Escalate to Program Office or COR</option>
-                                    <option value="reallocateFunds">Initiate funds reallocation or modification</option>
-                                </optgroup>
+                                <option value="">Select Recommended Correction</option>
+                                <option value="deobligateFunds">Deobligate Excess Funds via JV</option>
+                                <option value="amendPO">Amend Purchase Order</option>
+                                <option value="prepareJV">Prepare Journal Voucher for Reclassification</option>
+                                <option value="documentException">Document Exception Justification</option>
+                                <option value="manualAccrual">Record Manual Accrual</option>
+                                <option value="flagForInvestigation">Flag for Further Review or Investigation</option>
+                                <option value="escalateToPM">Escalate to Program Office / COR</option>
                             </select>
                         </div>
                         

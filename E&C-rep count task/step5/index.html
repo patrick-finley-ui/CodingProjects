@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E&C Verification Follow-Up Task – AWP Discrepancy Investigation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="task-info">
+                    <h1><i class="fas fa-search"></i> E&C Verification Follow-Up Task</h1>
+                    <p class="subtitle">Investigate G-Condition AWP Discrepancy</p>
+                </div>
+                <div class="assignee-info">
+                    <div class="assignee-badge">
+                        <i class="fas fa-user-tie"></i>
+                        <span>E&C Supervisor / Inventory Manager</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Task Description -->
+        <div class="card task-description">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i>
+                <h2>Task Description</h2>
+            </div>
+            <div class="card-content">
+                <p>An inventory discrepancy was flagged for the following item. Based on system cross-checks, there is a high likelihood the missing asset is being held in Awaiting Parts (AWP) status. Please investigate the G-Condition AWP locations and confirm if this asset is present and update custody information accordingly.</p>
+                <div class="ai-agent-info">
+                    <h3><i class="fas fa-robot"></i> AI Agent Analysis</h3>
+                    <p>The AI Agent performed correlation across:</p>
+                    <ul>
+                        <li><i class="fas fa-database"></i> ERP (Navy)</li>
+                        <li><i class="fas fa-warehouse"></i> DLA WMS</li>
+                        <li><i class="fas fa-cogs"></i> Industrial systems (R-Supply, NOSS)</li>
+                        <li><i class="fas fa-tools"></i> Repair pipeline status</li>
+                    </ul>
+                    <p><strong>Result:</strong> High likelihood of AWP status - flagged for human review</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item Information -->
+        <div class="card item-info">
+            <div class="card-header">
+                <i class="fas fa-box"></i>
+                <h2>Item Information</h2>
+                <span class="read-only-badge">Read Only</span>
+            </div>
+            <div class="card-content">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>NSN</label>
+                        <div class="read-only-field">1615-01-112-1234</div>
+                    </div>
+                    <div class="info-item">
+                        <label>APSR Qty</label>
+                        <div class="read-only-field">5</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Verified Qty (From Step 2)</label>
+                        <div class="read-only-field">3</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Expected Location</label>
+                        <div class="read-only-field location-badge">G-Condition Storage – AWP Subsection</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Last Repair Record</label>
+                        <div class="read-only-field">WO #8482923, Awaiting subassembly</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Last Known Custodian</label>
+                        <div class="read-only-field">FRC Repair Cell C</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Investigation Form -->
+        <div class="card investigation-form">
+            <div class="card-header">
+                <i class="fas fa-edit"></i>
+                <h2>Investigation Actions</h2>
+            </div>
+            <div class="card-content">
+                <form id="investigationForm">
+                    <!-- AWP Status Check -->
+                    <div class="form-group">
+                        <label for="awpStatus">
+                            <i class="fas fa-question-circle"></i>
+                            Is item found in AWP?
+                        </label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="awpStatus" value="yes" required>
+                                <span class="radio-custom"></span>
+                                <span class="radio-label">Yes</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="awpStatus" value="no" required>
+                                <span class="radio-custom"></span>
+                                <span class="radio-label">No</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Updated Custody Location -->
+                    <div class="form-group">
+                        <label for="custodyLocation">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Updated Custody Location
+                        </label>
+                        <div class="input-wrapper">
+                            <select id="custodyLocation" name="custodyLocation" required>
+                                <option value="">Select custody location...</option>
+                                <option value="FRC-North-Island-AWP">FRC North Island - AWP Section</option>
+                                <option value="FRC-North-Island-G-Condition">FRC North Island - G-Condition Storage</option>
+                                <option value="NAVSUP-FLC-San-Diego-AWP">NAVSUP FLC San Diego - AWP Section</option>
+                                <option value="NAVSUP-FLC-San-Diego-G-Condition">NAVSUP FLC San Diego - G-Condition Storage</option>
+                                <option value="NAVSUP-WSS-Mechanicsburg-AWP">NAVSUP WSS Mechanicsburg - AWP Section</option>
+                                <option value="NAVSUP-WSS-Mechanicsburg-G-Condition">NAVSUP WSS Mechanicsburg - G-Condition Storage</option>
+                                <option value="Repair-Cell-C">FRC Repair Cell C</option>
+                                <option value="Other">Other (specify in notes)</option>
+                            </select>
+                            <div class="input-icon">
+                                <i class="fas fa-warehouse"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label for="notes">
+                            <i class="fas fa-sticky-note"></i>
+                            Notes or Custody Chain Corrections
+                        </label>
+                        <textarea id="notes" name="notes" rows="4" placeholder="Enter detailed notes about the investigation, custody chain corrections, or any additional findings..."></textarea>
+                    </div>
+
+                    <!-- Evidence Upload -->
+                    <div class="form-group">
+                        <label for="evidenceUpload">
+                            <i class="fas fa-camera"></i>
+                            Attach Additional Evidence (Optional)
+                        </label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="evidenceUpload" name="evidenceUpload" accept="image/*,.pdf,.doc,.docx" multiple>
+                            <div class="file-upload-area" id="fileUploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload or drag and drop</p>
+                                <span>Supports: Images, PDF, DOC (Max 10MB each)</span>
+                            </div>
+                        </div>
+                        <div id="filePreview" class="file-preview"></div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="button" id="reconcileUpdate" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i>
+                            Reconcile & Update Records
+                        </button>
+                        <button type="button" id="flagForReview" class="btn btn-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Flag for Further Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- System Integration Status -->
+        <div class="card system-integration">
+            <div class="card-header">
+                <i class="fas fa-network-wired"></i>
+                <h2>Automated Follow-Up (Post-Task Completion)</h2>
+            </div>
+            <div class="card-content">
+                <div class="integration-steps">
+                    <div class="integration-step">
+                        <div class="step-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="step-content">
+                            <h4>ERP & WMS Update</h4>
+                            <p>Robot updates ERP and WMS systems with verified condition and custody data</p>
+                        </div>
+                    </div>
+                    <div class="integration-step">
+                        <div class="step-icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="step-content">
+                            <h4>Journal Voucher Generation</h4>
+                            <p>Generates a Journal Voucher or audit log entry if adjustment is required</p>
+                        </div>
+                    </div>
+                    <div class="integration-step">
+                        <div class="step-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="step-content">
+                            <h4>Audit Trail Update</h4>
+                            <p>Updates the verification record with audit trail for traceability</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Indicator -->
+        <div class="status-indicator" id="statusIndicator">
+            <div class="status-content">
+                <i class="fas fa-clock"></i>
+                <span>Task Pending Investigation</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Confirmation -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Confirm Action</h3>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Are you sure you want to proceed with this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelAction">Cancel</button>
+                <button class="btn btn-primary" id="confirmAction">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

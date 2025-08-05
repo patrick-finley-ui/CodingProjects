@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E&C Verification Task – Multi-Location Inventory Count</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="task-info">
+                    <h1><i class="fas fa-clipboard-check"></i> E&C Verification Task</h1>
+                    <p class="subtitle">Multi-Location Inventory Count Verification</p>
+                </div>
+                <div class="assignee-info">
+                    <div class="assignee-badge">
+                        <i class="fas fa-user"></i>
+                        <span>E&C Representative</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Task Description -->
+        <div class="card task-description">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i>
+                <h2>Task Description</h2>
+            </div>
+            <div class="card-content">
+                <p>Please verify the physical count of the following Navy Managed Inventory item at each designated location. The automation has collected expected quantities from Navy ERP, DLA WMS, and inventory management systems for comparison.</p>
+                <p>Perform a physical count at each storage location and confirm the actual quantity found matches the expected quantities from the systems.</p>
+            </div>
+        </div>
+
+        <!-- Item Information -->
+        <div class="card item-info">
+            <div class="card-header">
+                <i class="fas fa-box"></i>
+                <h2>Item Information</h2>
+                <span class="read-only-badge">Read Only</span>
+            </div>
+            <div class="card-content">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>NSN</label>
+                        <div class="read-only-field">1615-01-112-1234</div>
+                    </div>
+                    <div class="info-item">
+                        <label>NIIN</label>
+                        <div class="read-only-field">011121234</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Item Description</label>
+                        <div class="read-only-field">F/A-18 Power Generator</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Condition Code (Expected)</label>
+                        <div class="read-only-field condition-badge">G (Not Ready, Awaiting Repair)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Verification Cards -->
+        <div class="card location-verification">
+            <div class="card-header">
+                <i class="fas fa-map-marker-alt"></i>
+                <h2>Location Verification</h2>
+            </div>
+            <div class="card-content">
+                <!-- Location 1: FRC North Island -->
+                <div class="location-card">
+                    <div class="location-header">
+                        <h3><i class="fas fa-warehouse"></i> FRC North Island</h3>
+                        <span class="location-status pending">Pending Verification</span>
+                    </div>
+                    <div class="system-counts">
+                        <div class="system-count">
+                            <label>Navy ERP (APSR)</label>
+                            <div class="count-value">5</div>
+                        </div>
+                        <div class="system-count">
+                            <label>DLA WMS</label>
+                            <div class="count-value">3</div>
+                        </div>
+                        <div class="system-count">
+                            <label>Inventory Management</label>
+                            <div class="count-value">4</div>
+                        </div>
+                    </div>
+                    <div class="verification-input">
+                        <label for="physicalCount1">
+                            <i class="fas fa-calculator"></i>
+                            Physical Count at FRC North Island
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="number" id="physicalCount1" name="physicalCount1" min="0" placeholder="Enter physical count">
+                            <div class="input-icon">
+                                <i class="fas fa-hashtag"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location 2: NAVSUP Fleet Logistics Center -->
+                <div class="location-card">
+                    <div class="location-header">
+                        <h3><i class="fas fa-warehouse"></i> NAVSUP FLC San Diego</h3>
+                        <span class="location-status pending">Pending Verification</span>
+                    </div>
+                    <div class="system-counts">
+                        <div class="system-count">
+                            <label>Navy ERP (APSR)</label>
+                            <div class="count-value">2</div>
+                        </div>
+                        <div class="system-count">
+                            <label>DLA WMS</label>
+                            <div class="count-value">2</div>
+                        </div>
+                        <div class="system-count">
+                            <label>Inventory Management</label>
+                            <div class="count-value">1</div>
+                        </div>
+                    </div>
+                    <div class="verification-input">
+                        <label for="physicalCount2">
+                            <i class="fas fa-calculator"></i>
+                            Physical Count at NAVSUP FLC San Diego
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="number" id="physicalCount2" name="physicalCount2" min="0" placeholder="Enter physical count">
+                            <div class="input-icon">
+                                <i class="fas fa-hashtag"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location 3: NAVSUP Weapons Systems Support -->
+                <div class="location-card">
+                    <div class="location-header">
+                        <h3><i class="fas fa-warehouse"></i> NAVSUP WSS Mechanicsburg</h3>
+                        <span class="location-status pending">Pending Verification</span>
+                    </div>
+                    <div class="system-counts">
+                        <div class="system-count">
+                            <label>Navy ERP (APSR)</label>
+                            <div class="count-value">1</div>
+                        </div>
+                        <div class="system-count">
+                            <label>DLA WMS</label>
+                            <div class="count-value">1</div>
+                        </div>
+                        <div class="system-count">
+                            <label>Inventory Management</label>
+                            <div class="count-value">0</div>
+                        </div>
+                    </div>
+                    <div class="verification-input">
+                        <label for="physicalCount3">
+                            <i class="fas fa-calculator"></i>
+                            Physical Count at NAVSUP WSS Mechanicsburg
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="number" id="physicalCount3" name="physicalCount3" min="0" placeholder="Enter physical count">
+                            <div class="input-icon">
+                                <i class="fas fa-hashtag"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Form -->
+        <div class="card action-form">
+            <div class="card-header">
+                <i class="fas fa-edit"></i>
+                <h2>Verification Actions</h2>
+            </div>
+            <div class="card-content">
+                <form id="verificationForm">
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label for="notes">
+                            <i class="fas fa-sticky-note"></i>
+                            Notes / Discrepancy Explanation
+                        </label>
+                        <textarea id="notes" name="notes" rows="4" placeholder="Enter any notes or explanation for discrepancies found at any location..."></textarea>
+                    </div>
+
+                    <!-- Photo Upload -->
+                    <div class="form-group">
+                        <label for="photoEvidence">
+                            <i class="fas fa-camera"></i>
+                            Upload Photo Evidence
+                        </label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="photoEvidence" name="photoEvidence" accept="image/*" multiple>
+                            <div class="file-upload-area" id="fileUploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload or drag and drop</p>
+                                <span>Supports: JPG, PNG, GIF (Max 10MB each)</span>
+                            </div>
+                        </div>
+                        <div id="filePreview" class="file-preview"></div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="button" id="markVerified" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i>
+                            Mark All Locations Verified
+                        </button>
+                        <button type="button" id="reportDiscrepancy" class="btn btn-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Report Discrepancies
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Status Indicator -->
+        <div class="status-indicator" id="statusIndicator">
+            <div class="status-content">
+                <i class="fas fa-clock"></i>
+                <span>Task Pending Verification</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Confirmation -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Confirm Action</h3>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Are you sure you want to proceed with this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelAction">Cancel</button>
+                <button class="btn btn-primary" id="confirmAction">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
