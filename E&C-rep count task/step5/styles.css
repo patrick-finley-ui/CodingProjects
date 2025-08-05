@@ -211,6 +211,13 @@ body {
     border-color: #f6ad55;
 }
 
+.status-badge {
+    background: linear-gradient(135deg, #fed7d7, #feb2b2);
+    color: #c53030;
+    font-weight: 600;
+    border-color: #fc8181;
+}
+
 /* Radio Button Styles */
 .radio-group {
     display: flex;

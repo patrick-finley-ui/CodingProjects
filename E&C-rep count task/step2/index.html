@@ -10,220 +10,266 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="task-info">
-                    <h1><i class="fas fa-clipboard-check"></i> E&C Verification Task</h1>
-                    <p class="subtitle">Multi-Location Inventory Count Verification</p>
-                </div>
-                <div class="assignee-info">
-                    <div class="assignee-badge">
-                        <i class="fas fa-user"></i>
-                        <span>E&C Representative</span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Task Description -->
-        <div class="card task-description">
+        <!-- Main Verification Card -->
+        <div class="main-card">
+            <!-- Header -->
             <div class="card-header">
-                <i class="fas fa-info-circle"></i>
-                <h2>Task Description</h2>
-            </div>
-            <div class="card-content">
-                <p>Please verify the physical count of the following Navy Managed Inventory item at each designated location. The automation has collected expected quantities from Navy ERP, DLA WMS, and inventory management systems for comparison.</p>
-                <p>Perform a physical count at each storage location and confirm the actual quantity found matches the expected quantities from the systems.</p>
-            </div>
-        </div>
-
-        <!-- Item Information -->
-        <div class="card item-info">
-            <div class="card-header">
-                <i class="fas fa-box"></i>
-                <h2>Item Information</h2>
-                <span class="read-only-badge">Read Only</span>
-            </div>
-            <div class="card-content">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>NSN</label>
-                        <div class="read-only-field">1615-01-112-1234</div>
+                <div class="header-content">
+                    <div class="task-info">
+                        <h1><i class="fas fa-clipboard-check"></i> E&C Verification Task</h1>
+                        <p class="subtitle">Multi-Location Inventory Count Verification:</p>
+                        <p class="subtitle">Wheel, Landing Gear (F-18)</p>
                     </div>
-                    <div class="info-item">
-                        <label>NIIN</label>
-                        <div class="read-only-field">011121234</div>
-                    </div>
-                    <div class="info-item">
-                        <label>Item Description</label>
-                        <div class="read-only-field">F/A-18 Power Generator</div>
-                    </div>
-                    <div class="info-item">
-                        <label>Condition Code (Expected)</label>
-                        <div class="read-only-field condition-badge">G (Not Ready, Awaiting Repair)</div>
+                    <div class="assignee-info">
+                        <div class="assignee-badge">
+                            <i class="fas fa-user"></i>
+                            <span>E&C Representative</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Location Verification Cards -->
-        <div class="card location-verification">
-            <div class="card-header">
-                <i class="fas fa-map-marker-alt"></i>
-                <h2>Location Verification</h2>
+            <!-- Task Description & Item Information -->
+            <div class="section task-item-info">
+                <div class="two-column-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <!-- Left Column: Task Details -->
+                    <div>
+                        <h3><i class="fas fa-tasks"></i>Instructions</h3>
+                        <ul class="task-desc-list">
+                            <li>
+                                <ul>
+                                    <li>Check the boxes for each item you have physically verified.</li>
+                                    <li>The verification count will automatically update.</li>
+                                    <li>Note any discrepancies if the verified count does not match the expected quantity.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Right Column: Location Information -->
+                    <div>
+                        <div class="location-header-with-status">
+                            <h3><i class="fas fa-map-marker-alt"></i> Location Information</h3>
+                            <span class="location-status pending">Pending Verification</span>
+                        </div>
+                        <ul class="task-desc-list">
+                            <li>
+                                <strong>Location:</strong>
+                                <i class="fas fa-warehouse"></i> FRC North Island
+                            </li>
+                            <li>
+                                <strong>Building:</strong>
+                                Warehouse 05, Row 2, Shelf 3
+                            </li>
+                            <li>
+                                <strong>Expected Quantity:</strong>
+                                <span id="erpCount">5</span> units
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+          
+                
+                <div style="height: 1rem;"></div>
+                
             </div>
-            <div class="card-content">
-                <!-- Location 1: FRC North Island -->
-                <div class="location-card">
-                    <div class="location-header">
-                        <h3><i class="fas fa-warehouse"></i> FRC North Island</h3>
-                        <span class="location-status pending">Pending Verification</span>
+
+            <!-- Verification Actions -->
+            <div class="section verification-actions">
+                <h2><i class="fas fa-edit"></i> Verification Actions</h2>
+                <div class="expandable-item-details">
+                    <div class="item-summary" id="itemSummary">
+                        <!-- First Row: Item Info and Photo Button -->
+                        <div class="summary-row-top">
+                            <div class="item-info">
+                                <div class="item-identifiers">Item:</div>
+                                <div class="item-description">WHEEL, LANDING GEAR (F-18)</div>
+                            </div>
+                            <div class="item-info">
+                                <div class="item-identifiers">NSN: 1730-01-455-1435</div>
+                                <div class="item-identifiers">P/N: 2611745-1</div>
+                            </div>
+                            <div class="photo-button" id="photoButton">
+                                <i class="fas fa-image"></i>
+                                <span>Show Photo</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Second Row: Counts and View Details Button -->
+                        <div class="summary-row-bottom">
+                            <div class="counts-section">
+                                <div class="item-count">
+                                    <span class="count-number">5</span>
+                                    <span class="count-label">items</span>
+                                </div>
+                                <div class="vertical-separator"></div>
+                                <div class="verification-kpi">
+                                    <span class="verified-number">0</span>
+                                    <span class="verified-label">verified</span>
+                                </div>
+                            </div>
+                            <div class="expand-button" id="expandButton">
+                                <i class="fas fa-chevron-down"></i>
+                                <span>View Details</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="system-counts">
-                        <div class="system-count">
-                            <label>Navy ERP (APSR)</label>
-                            <div class="count-value">5</div>
+                    
+                    <div class="item-details-expanded" id="itemDetailsExpanded" style="display: none;">
+                        <div class="expanded-header">
+                            <h4>Individual Item Details</h4>
+                            <button class="collapse-button" id="collapseButton">
+                                <i class="fas fa-chevron-up"></i>
+                                <span>Collapse</span>
+                            </button>
                         </div>
-                        <div class="system-count">
-                            <label>DLA WMS</label>
-                            <div class="count-value">3</div>
-                        </div>
-                        <div class="system-count">
-                            <label>Inventory Management</label>
-                            <div class="count-value">4</div>
+                        <div class="items-table">
+                            <table class="items-table-content">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">
+                                            <input type="checkbox" id="selectAll" class="item-checkbox">
+                                        </th>
+                                        <th>Part Number</th>
+                                        <th>Serial Number</th>
+                                        <th>Condition</th>
+                                        <th>Status</th>
+                                        <th>Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-001">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-001</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-002">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-002</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-003">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-003</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-004">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-004</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-005">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-005</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="verification-input">
-                        <label for="physicalCount1">
-                            <i class="fas fa-calculator"></i>
-                            Physical Count at FRC North Island
-                        </label>
-                        <div class="input-wrapper">
-                            <input type="number" id="physicalCount1" name="physicalCount1" min="0" placeholder="Enter physical count">
-                            <div class="input-icon">
-                                <i class="fas fa-hashtag"></i>
+                    
+                    <div class="item-photo-expanded" id="itemPhotoExpanded" style="display: none;">
+                        <div class="expanded-header">
+                            <h4>Item Reference Photo</h4>
+                            <button class="collapse-button" id="collapsePhotoButton">
+                                <i class="fas fa-chevron-up"></i>
+                                <span>Collapse</span>
+                            </button>
+                        </div>
+                        <div class="photo-container">
+                            <img src="https://image2.pushauction.com/3/0/0/d3179b67-cdcf-4a58-b989-de5c9b6c783c/67c49028-3070-4a92-8562-fa79e8a04e10.jpg" 
+                                 alt="Wheel, Landing Gear (F-18)" 
+                                 class="expanded-photo">
+                            <div class="photo-caption">
+                                <strong>WHEEL, LANDING GEAR (F-18)</strong>
+                                <p>Reference image for verification purposes</p>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Location 2: NAVSUP Fleet Logistics Center -->
-                <div class="location-card">
-                    <div class="location-header">
-                        <h3><i class="fas fa-warehouse"></i> NAVSUP FLC San Diego</h3>
-                        <span class="location-status pending">Pending Verification</span>
-                    </div>
-                    <div class="system-counts">
-                        <div class="system-count">
-                            <label>Navy ERP (APSR)</label>
-                            <div class="count-value">2</div>
-                        </div>
-                        <div class="system-count">
-                            <label>DLA WMS</label>
-                            <div class="count-value">2</div>
-                        </div>
-                        <div class="system-count">
-                            <label>Inventory Management</label>
-                            <div class="count-value">1</div>
-                        </div>
-                    </div>
-                    <div class="verification-input">
-                        <label for="physicalCount2">
-                            <i class="fas fa-calculator"></i>
-                            Physical Count at NAVSUP FLC San Diego
-                        </label>
-                        <div class="input-wrapper">
-                            <input type="number" id="physicalCount2" name="physicalCount2" min="0" placeholder="Enter physical count">
-                            <div class="input-icon">
-                                <i class="fas fa-hashtag"></i>
+                <div class="verification-columns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <!-- Left Column: Physical Count & Notes -->
+                    <div class="left-column">
+                        <!-- Physical Count Input -->
+                        <div class="form-group">
+                            <label for="physicalCount1">
+                                <i class="fas fa-calculator"></i>
+                                Verified Items Count
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="number" id="physicalCount1" name="physicalCount1" min="0" placeholder="Auto-populated from checkboxes" readonly>
+                                <div class="input-icon">
+                                    <i class="fas fa-hashtag"></i>
+                                </div>
                             </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group">
+                            <label for="notes">
+                                <i class="fas fa-sticky-note"></i>
+                                Notes / Discrepancy Explanation
+                            </label>
+                            <textarea id="notes" name="notes" rows="6" placeholder="Enter any notes or explanation for discrepancies found..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Photo Upload -->
+                    <div class="right-column">
+                        <!-- Photo Upload -->
+                        <div class="form-group">
+                            <label for="photoEvidence">
+                                <i class="fas fa-camera"></i>
+                                Upload Photo Evidence
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="photoEvidence" name="photoEvidence" accept="image/*" multiple>
+                                <div class="file-upload-area" id="fileUploadArea">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Click to upload or drag and drop</p>
+                                    <span>Supports: JPG, PNG, GIF (Max 10MB each)</span>
+                                </div>
+                            </div>
+                            <div id="filePreview" class="file-preview"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Location 3: NAVSUP Weapons Systems Support -->
-                <div class="location-card">
-                    <div class="location-header">
-                        <h3><i class="fas fa-warehouse"></i> NAVSUP WSS Mechanicsburg</h3>
-                        <span class="location-status pending">Pending Verification</span>
-                    </div>
-                    <div class="system-counts">
-                        <div class="system-count">
-                            <label>Navy ERP (APSR)</label>
-                            <div class="count-value">1</div>
-                        </div>
-                        <div class="system-count">
-                            <label>DLA WMS</label>
-                            <div class="count-value">1</div>
-                        </div>
-                        <div class="system-count">
-                            <label>Inventory Management</label>
-                            <div class="count-value">0</div>
-                        </div>
-                    </div>
-                    <div class="verification-input">
-                        <label for="physicalCount3">
-                            <i class="fas fa-calculator"></i>
-                            Physical Count at NAVSUP WSS Mechanicsburg
-                        </label>
-                        <div class="input-wrapper">
-                            <input type="number" id="physicalCount3" name="physicalCount3" min="0" placeholder="Enter physical count">
-                            <div class="input-icon">
-                                <i class="fas fa-hashtag"></i>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Action Buttons -->
+                <div class="action-buttons" style="display: flex; justify-content: center; gap: .1rem; margin: .5rem;">
+                    <button type="button" id="markVerified" class="btn btn-success" disabled>
+                        <i class="fas fa-check-circle"></i>
+                        Mark Location Verified
+                    </button>
+                    <button type="button" id="reportDiscrepancy" class="btn btn-danger" disabled>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Report Discrepancies
+                    </button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Action Form -->
-        <div class="card action-form">
-            <div class="card-header">
-                <i class="fas fa-edit"></i>
-                <h2>Verification Actions</h2>
-            </div>
-            <div class="card-content">
-                <form id="verificationForm">
-                    <!-- Notes -->
-                    <div class="form-group">
-                        <label for="notes">
-                            <i class="fas fa-sticky-note"></i>
-                            Notes / Discrepancy Explanation
-                        </label>
-                        <textarea id="notes" name="notes" rows="4" placeholder="Enter any notes or explanation for discrepancies found at any location..."></textarea>
-                    </div>
-
-                    <!-- Photo Upload -->
-                    <div class="form-group">
-                        <label for="photoEvidence">
-                            <i class="fas fa-camera"></i>
-                            Upload Photo Evidence
-                        </label>
-                        <div class="file-upload-wrapper">
-                            <input type="file" id="photoEvidence" name="photoEvidence" accept="image/*" multiple>
-                            <div class="file-upload-area" id="fileUploadArea">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Click to upload or drag and drop</p>
-                                <span>Supports: JPG, PNG, GIF (Max 10MB each)</span>
-                            </div>
-                        </div>
-                        <div id="filePreview" class="file-preview"></div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="action-buttons">
-                        <button type="button" id="markVerified" class="btn btn-success">
-                            <i class="fas fa-check-circle"></i>
-                            Mark All Locations Verified
-                        </button>
-                        <button type="button" id="reportDiscrepancy" class="btn btn-danger">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            Report Discrepancies
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
 

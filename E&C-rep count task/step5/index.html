@@ -39,11 +39,12 @@
                     <p>The AI Agent performed correlation across:</p>
                     <ul>
                         <li><i class="fas fa-database"></i> ERP (Navy)</li>
+                        <li><i class="fas fa-shield-alt"></i> Defense Property Accountability System (DPAS)</li>
                         <li><i class="fas fa-warehouse"></i> DLA WMS</li>
                         <li><i class="fas fa-cogs"></i> Industrial systems (R-Supply, NOSS)</li>
                         <li><i class="fas fa-tools"></i> Repair pipeline status</li>
                     </ul>
-                    <p><strong>Result:</strong> High likelihood of AWP status - flagged for human review</p>
+                    <p><strong>Result:</strong> Agent found specific work order WO#8473921 tied to this part. Item frequently taken off Active status for repair orders. High likelihood of AWP status - flagged for human review</p>
                 </div>
             </div>
         </div>
@@ -58,8 +59,12 @@
             <div class="card-content">
                 <div class="info-grid">
                     <div class="info-item">
+                        <label>Item Description</label>
+                        <div class="read-only-field">WHEEL, LANDING GEAR (F-18)</div>
+                    </div>
+                    <div class="info-item">
                         <label>NSN</label>
-                        <div class="read-only-field">1615-01-112-1234</div>
+                        <div class="read-only-field">1730-01-455-1435</div>
                     </div>
                     <div class="info-item">
                         <label>APSR Qty</label>
@@ -75,11 +80,15 @@
                     </div>
                     <div class="info-item">
                         <label>Last Repair Record</label>
-                        <div class="read-only-field">WO #8482923, Awaiting subassembly</div>
+                        <div class="read-only-field">WO #8473921, Awaiting subassembly</div>
                     </div>
                     <div class="info-item">
                         <label>Last Known Custodian</label>
                         <div class="read-only-field">FRC Repair Cell C</div>
+                    </div>
+                    <div class="info-item">
+                        <label>DPAS Status</label>
+                        <div class="read-only-field status-badge">Frequently Off Active - Repair Orders</div>
                     </div>
                 </div>
             </div>
