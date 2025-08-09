@@ -11,7 +11,7 @@
       width: 748px;
       height: 748px;
       grid-template-columns: 320px 198px 153px 50px;
-      grid-template-rows: 414px 155px 20px;
+      grid-template-rows: 414px 130px 155px 20px;
       gap: 9px;
       background-color: #000;
     }
@@ -19,18 +19,47 @@
       background-color: #F0F1EC;
     }
     .red {
-      grid-column: 1;
-      grid-row: 1;
+      background-color: #E72F24;
+      grid-column: 1 / 2;
+      grid-row: 1 / 2;
     }
     .blue {
-      grid-column: 2;
+      background-color: #004592;
+      grid-column: 4 / 5;
+      grid-row: 2 / 3;
+      border-bottom: 10px solid #000;
     }
     .yellow {
-      grid-column: 3;
+      background-color: #F9D01E;
+      grid-column: 2 / 3;
+      grid-row: 4 / 5;
     }
+
+
+    .top-right {
+      grid-area: 1 / 2 / 2 / 5
+
+    }
+
+    .middle-left {
+      grid-area: 2 / 1 / 4 / 2
+    }
+
+    .middle-right {
+      grid-area: 2 / 2 / 4 / 4
+    }
+
     .black {
-      grid-column: 4;
+      background-color: #232629;
+      grid-column: 3 / 4;
+      grid-row: 4 / 5;
     }
+
+    .br {
+      grid-column: 4 / 5;
+      grid-row: 3 / 5;
+    }
+
     /* 
     Write your CSS here 
     Gap Colour: #000
@@ -50,9 +79,17 @@
 <body>
   <div class="container">
     <div class="grid-item red"></div>
+    <div class="grid-item top-right"></div>
+    <div class="grid-item middle-left"></div>
+    <div class="grid-item middle-right"></div>
     <div class="grid-item blue"></div>
-    <div class="grid-item yellow"></div>
     <div class="grid-item black"></div>
+    <div class="grid-item yellow"></div>
+    <div class="grid-item"></div>
+    <div class="grid-item black"></div>
+    <div class="grid-item"></div>
+    <div class="grid-item br"></div>
+
   </div>
   <!-- Write your HTML here -->
 </body>

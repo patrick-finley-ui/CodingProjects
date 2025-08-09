@@ -251,7 +251,7 @@
                                 <div class="file-upload-area" id="fileUploadArea">
                                     <i class="fas fa-cloud-upload-alt"></i>
                                     <p>Click to upload or drag and drop</p>
-                                    <span>Supports: JPG, PNG, GIF (Max 10MB each)</span>
+                                    <span>Supports: JPG, PNG, GIF (Max 1MB each for UiPath compatibility)</span>
                                 </div>
                             </div>
                             <div id="filePreview" class="file-preview"></div>
@@ -259,17 +259,8 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="action-buttons" style="display: flex; justify-content: center; gap: .1rem; margin: .5rem;">
-                    <button type="button" id="markVerified" class="btn btn-success" disabled>
-                        <i class="fas fa-check-circle"></i>
-                        Mark Location Verified
-                    </button>
-                    <button type="button" id="reportDiscrepancy" class="btn btn-danger" disabled>
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Report Discrepancies
-                    </button>
-                </div>
+                <!-- Action Buttons - Removed for UiPath integration -->
+                <!-- UiPath will handle submission logic -->
             </div>
         </div>
 
@@ -278,25 +269,6 @@
             <div class="status-content">
                 <i class="fas fa-clock"></i>
                 <span>Task Pending Verification</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Confirmation -->
-    <div id="confirmationModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">Confirm Action</h3>
-                <button class="modal-close" id="closeModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p id="modalMessage">Are you sure you want to proceed with this action?</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelAction">Cancel</button>
-                <button class="btn btn-primary" id="confirmAction">Confirm</button>
             </div>
         </div>
     </div>

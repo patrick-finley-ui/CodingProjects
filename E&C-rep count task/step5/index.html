@@ -26,73 +26,73 @@
             </div>
         </header>
 
-        <!-- Task Description -->
-        <div class="card task-description">
+        <!-- Task Overview -->
+        <div class="card task-overview">
             <div class="card-header">
                 <i class="fas fa-info-circle"></i>
-                <h2>Task Description</h2>
+                <h2>Task Overview</h2>
             </div>
             <div class="card-content">
-                <p>An inventory discrepancy was flagged for the following item. Based on system cross-checks, there is a high likelihood the missing asset is being held in Awaiting Parts (AWP) status. Please investigate the G-Condition AWP locations and confirm if this asset is present and update custody information accordingly.</p>
-                <div class="ai-agent-info">
-                    <h3><i class="fas fa-robot"></i> AI Agent Analysis</h3>
-                    <p>The AI Agent performed correlation across:</p>
-                    <ul>
-                        <li><i class="fas fa-database"></i> ERP (Navy)</li>
-                        <li><i class="fas fa-shield-alt"></i> Defense Property Accountability System (DPAS)</li>
-                        <li><i class="fas fa-warehouse"></i> DLA WMS</li>
-                        <li><i class="fas fa-cogs"></i> Industrial systems (R-Supply, NOSS)</li>
-                        <li><i class="fas fa-tools"></i> Repair pipeline status</li>
-                    </ul>
-                    <p><strong>Result:</strong> Agent found specific work order WO#8473921 tied to this part. Item frequently taken off Active status for repair orders. High likelihood of AWP status - flagged for human review</p>
+                <p>An inventory discrepancy has been identified for the following item:</p>
+                <div class="discrepancy-details">
+                    <div class="discrepancy-item">
+                        <strong>Item:</strong> WHEEL, LANDING GEAR (F/A-18)
+                    </div>
+                    <div class="discrepancy-item">
+                        <strong>NSN:</strong> 1630-01-123-4567
+                    </div>
+                    <div class="discrepancy-item">
+                        <strong>Expected Qty:</strong> 5 units (A-Condition)
+                    </div>
+                    <div class="discrepancy-item">
+                        <strong>Verified Qty:</strong> 3 units
+                    </div>
+                </div>
+                <p class="task-instruction">Your task is to investigate the cause of this discrepancy and confirm whether the missing items are located elsewhere—specifically in AWP (Awaiting Parts) storage. Please conduct a spot check and update custody or condition records as needed.</p>
+            </div>
+        </div>
+
+        <!-- AI Agent Investigation Summary -->
+        <div class="card ai-investigation">
+            <div class="card-header collapsible-header" id="aiInvestigationHeader">
+                <i class="fas fa-robot"></i>
+                <h2>AI Agent Investigation Summary</h2>
+                <i class="fas fa-chevron-down toggle-icon" id="aiToggleIcon"></i>
+            </div>
+            <div class="card-content collapsible-content" id="aiInvestigationContent">
+                <p>To assist in this task, the automation performed a step-by-step investigation across multiple systems:</p>
+                
+                <div class="investigation-list">
+                    <div class="investigation-item">
+                        <i class="fas fa-database"></i>
+                        <div class="item-content">
+                            <strong>Navy ERP (SAP ECC):</strong> Queried accountable inventory records – found no additional A-condition assets matching the missing quantity.
+                        </div>
+                    </div>
+                    
+                    <div class="investigation-item">
+                        <i class="fas fa-warehouse"></i>
+                        <div class="item-content">
+                            <strong>DLA Warehouse Management System (WMS):</strong> Located multiple prior instances of the same NSN in non-RFI conditions (e.g., F and G), indicating frequent repair activity.
+                        </div>
+                    </div>
+                    
+                    <div class="investigation-item">
+                        <i class="fas fa-cogs"></i>
+                        <div class="item-content">
+                            <strong>Industrial Repair Systems (e.g., NOSS / R-Supply):</strong> Searched for active or recent work orders – found Work Order #8473921 referencing this item and NSN.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="conclusion-section">
+                    <h3><i class="fas fa-lightbulb"></i> Conclusion</h3>
+                    <p>The missing item is likely not lost, but currently pulled for repair and held in AWP status, awaiting subcomponent parts. Agent flagged this for human verification.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Item Information -->
-        <div class="card item-info">
-            <div class="card-header">
-                <i class="fas fa-box"></i>
-                <h2>Item Information</h2>
-                <span class="read-only-badge">Read Only</span>
-            </div>
-            <div class="card-content">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Item Description</label>
-                        <div class="read-only-field">WHEEL, LANDING GEAR (F-18)</div>
-                    </div>
-                    <div class="info-item">
-                        <label>NSN</label>
-                        <div class="read-only-field">1730-01-455-1435</div>
-                    </div>
-                    <div class="info-item">
-                        <label>APSR Qty</label>
-                        <div class="read-only-field">5</div>
-                    </div>
-                    <div class="info-item">
-                        <label>Verified Qty (From Step 2)</label>
-                        <div class="read-only-field">3</div>
-                    </div>
-                    <div class="info-item">
-                        <label>Expected Location</label>
-                        <div class="read-only-field location-badge">G-Condition Storage – AWP Subsection</div>
-                    </div>
-                    <div class="info-item">
-                        <label>Last Repair Record</label>
-                        <div class="read-only-field">WO #8473921, Awaiting subassembly</div>
-                    </div>
-                    <div class="info-item">
-                        <label>Last Known Custodian</label>
-                        <div class="read-only-field">FRC Repair Cell C</div>
-                    </div>
-                    <div class="info-item">
-                        <label>DPAS Status</label>
-                        <div class="read-only-field status-badge">Frequently Off Active - Repair Orders</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Investigation Form -->
         <div class="card investigation-form">
@@ -180,7 +180,7 @@
                         </button>
                         <button type="button" id="flagForReview" class="btn btn-warning">
                             <i class="fas fa-exclamation-triangle"></i>
-                            Flag for Further Review
+                            Flag for Further Review & Generate Documentation
                         </button>
                     </div>
                 </form>

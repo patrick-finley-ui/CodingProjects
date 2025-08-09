@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+    background: #303b8a;
     min-height: 100vh;
     color: #333;
     line-height: 1.6;
@@ -1308,4 +1308,280 @@ body {
     .item-reference-img {
         max-height: 200px;
     }
+} 
+
+/* Additional UiPath compatibility styles */
+.card-header.collapsible-header {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.card-header.collapsible-header:hover {
+    cursor: pointer;
+}
+
+.toggle-icon {
+    pointer-events: none; /* Prevent icon from interfering with click */
+}
+
+/* Ensure proper z-index for modal in UiPath environment */
+.modal {
+    z-index: 9999;
+}
+
+/* Additional debugging styles for UiPath */
+.expandable-item-details {
+    position: relative;
+    z-index: 1;
+}
+
+.item-summary {
+    position: relative;
+    z-index: 2;
+}
+
+.expand-button,
+.photo-button {
+    position: relative;
+    z-index: 3;
+}
+
+/* Enhanced touch targets for mobile/iFrame environments */
+.expand-button,
+.photo-button,
+.collapse-button {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Improved focus states for accessibility */
+.expand-button:focus,
+.photo-button:focus,
+.collapse-button:focus {
+    outline: 2px solid #1e3a8a;
+    outline-offset: 2px;
+}
+
+/* Enhanced file upload area for UiPath */
+.file-upload-area {
+    position: relative;
+    z-index: 1;
+}
+
+.file-upload-area:hover {
+    cursor: pointer;
+}
+
+/* Improved notification positioning for iFrame */
+.notification {
+    position: fixed !important;
+    z-index: 10000 !important;
+}
+
+/* Enhanced modal backdrop for iFrame */
+.modal {
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+/* Improved table responsiveness for UiPath */
+.items-table-content {
+    min-width: 600px;
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .items-table-content {
+        min-width: 400px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Enhanced checkbox styling for UiPath */
+.item-checkbox {
+    min-width: 18px;
+    min-height: 18px;
+    cursor: pointer;
+    accent-color: #38a169;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 2px solid #cbd5e0;
+    border-radius: 3px;
+    background: white;
+    position: relative;
+}
+
+.item-checkbox:checked {
+    background-color: #38a169;
+    border-color: #38a169;
+}
+
+.item-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Improved status indicator for UiPath */
+.status-indicator {
+    position: fixed !important;
+    z-index: 10001 !important;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+/* Enhanced button states for UiPath */
+.btn:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.btn:not(:disabled):hover {
+    transform: translateY(-1px) !important;
+}
+
+/* Improved form validation visual feedback */
+.input-wrapper input:invalid,
+.form-group textarea:invalid {
+    border-color: #e53e3e !important;
+}
+
+.input-wrapper input:valid,
+.form-group textarea:valid {
+    border-color: #48bb78 !important;
+}
+
+/* Enhanced photo container for UiPath */
+.photo-container {
+    position: relative;
+    z-index: 1;
+}
+
+.expanded-photo {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+}
+
+/* Improved file preview for UiPath */
+.file-preview-item {
+    position: relative;
+    z-index: 1;
+}
+
+.remove-file {
+    position: relative;
+    z-index: 2;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+/* Enhanced responsive design for UiPath */
+@media (max-width: 480px) {
+    .container {
+        padding: 0.5rem;
+    }
+    
+    .main-card {
+        border-radius: 8px;
+    }
+    
+    .card-header {
+        padding: 1rem;
+    }
+    
+    .task-info h1 {
+        font-size: 1.5rem;
+    }
+    
+    .expand-button,
+    .photo-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Additional debugging styles */
+.debug-info {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    z-index: 10002;
+    display: none;
+}
+
+/* Force hardware acceleration for smooth animations */
+.main-card,
+.expandable-item-details,
+.modal,
+.notification {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+}
+
+/* Enhanced accessibility for UiPath */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Improved focus management for UiPath */
+.modal:focus-within {
+    outline: none;
+}
+
+.modal-content:focus {
+    outline: none;
+}
+
+/* Enhanced error states for UiPath */
+.field-error {
+    color: #e53e3e !important;
+    font-size: 0.875rem !important;
+    margin-top: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.field-error i {
+    color: #e53e3e !important;
+}
+
+/* Improved success states for UiPath */
+.field-success {
+    color: #48bb78 !important;
+    font-size: 0.875rem !important;
+    margin-top: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.field-success i {
+    color: #48bb78 !important;
 } 
