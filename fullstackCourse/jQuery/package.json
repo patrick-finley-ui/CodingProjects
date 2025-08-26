@@ -1,0 +1,17 @@
+{
+    "name": "jquery",
+    "version": "1.0.0",
+    "description": "jquery",
+    "license": "ISC",
+    "author": "",
+    "type": "commonjs",
+    "main": "index.js",
+    "scripts": {
+        "test": "$(\"h1\")"
+    },
+    "typeAcquisition": {
+        "include": [
+            "jquery"
+        ]
+    }
+}
