@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E&C Verification Task – Multi-Location Inventory Count</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Main Verification Card -->
+        <div class="main-card">
+            <!-- Header -->
+            <div class="card-header">
+                <div class="header-content">
+                    <div class="task-info">
+                        <h1><i class="fas fa-clipboard-check"></i> E&C Verification Task</h1>
+                        <p class="subtitle">Multi-Location Inventory Count Verification:</p>
+                        <p class="subtitle">Wheel, Landing Gear (F-18)</p>
+                    </div>
+                    <div class="assignee-info">
+                        <div class="assignee-badge">
+                            <i class="fas fa-user"></i>
+                            <span>E&C Representative</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Description & Item Information -->
+            <div class="section task-item-info">
+                <div class="two-column-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <!-- Left Column: Task Details -->
+                    <div>
+                        <h3><i class="fas fa-tasks"></i>Instructions</h3>
+                        <ul class="task-desc-list">
+                            <li>
+                                <ul>
+                                    <li>Check the boxes for each item you have physically verified.</li>
+                                    <li>The verification count will automatically update.</li>
+                                    <li>Note any discrepancies if the verified count does not match the expected quantity.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Right Column: Location Information -->
+                    <div>
+                        <div class="location-header-with-status">
+                            <h3><i class="fas fa-map-marker-alt"></i> Location Information</h3>
+                            <span class="location-status pending">Pending Verification</span>
+                        </div>
+                        <ul class="task-desc-list">
+                            <li>
+                                <strong>Location:</strong>
+                                <i class="fas fa-warehouse"></i> FRC North Island
+                            </li>
+                            <li>
+                                <strong>Building:</strong>
+                                Warehouse 05, Row 2, Shelf 3
+                            </li>
+                            <li>
+                                <strong>Expected Quantity:</strong>
+                                <span id="erpCount">5</span> units
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+          
+                
+                <div style="height: 1rem;"></div>
+                
+            </div>
+
+            <!-- Verification Actions -->
+            <div class="section verification-actions">
+                <h2><i class="fas fa-edit"></i> Verification Actions</h2>
+                <div class="expandable-item-details">
+                    <div class="item-summary" id="itemSummary">
+                        <!-- First Row: Item Info and Photo Button -->
+                        <div class="summary-row-top">
+                            <div class="item-info">
+                                <div class="item-identifiers">Item:</div>
+                                <div class="item-description">WHEEL, LANDING GEAR (F-18)</div>
+                            </div>
+                            <div class="item-info">
+                                <div class="item-identifiers">NSN: 1730-01-455-1435</div>
+                                <div class="item-identifiers">P/N: 2611745-1</div>
+                            </div>
+                            <div class="photo-button" id="photoButton">
+                                <i class="fas fa-image"></i>
+                                <span>Show Photo</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Second Row: Counts and View Details Button -->
+                        <div class="summary-row-bottom">
+                            <div class="counts-section">
+                                <div class="item-count">
+                                    <span class="count-number">5</span>
+                                    <span class="count-label">items</span>
+                                </div>
+                                <div class="vertical-separator"></div>
+                                <div class="verification-kpi">
+                                    <span class="verified-number">0</span>
+                                    <span class="verified-label">verified</span>
+                                </div>
+                            </div>
+                            <div class="expand-button" id="expandButton">
+                                <i class="fas fa-chevron-down"></i>
+                                <span>View Details</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="item-details-expanded" id="itemDetailsExpanded" style="display: none;">
+                        <div class="expanded-header">
+                            <h4>Individual Item Details</h4>
+                            <button class="collapse-button" id="collapseButton">
+                                <i class="fas fa-chevron-up"></i>
+                                <span>Collapse</span>
+                            </button>
+                        </div>
+                        <div class="items-table">
+                            <table class="items-table-content">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">
+                                            <input type="checkbox" id="selectAll" class="item-checkbox">
+                                        </th>
+                                        <th>Part Number</th>
+                                        <th>Serial Number</th>
+                                        <th>Condition</th>
+                                        <th>Status</th>
+                                        <th>Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-001">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-001</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-002">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-002</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-003">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-003</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-004">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-004</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="item-checkbox" data-item-id="SN-005">
+                                        </td>
+                                        <td>2611745-1</td>
+                                        <td>SN-005</td>
+                                        <td><span class="condition-badge good">A</span></td>
+                                        <td><span class="status-badge available">Available</span></td>
+                                        <td>Warehouse 05, Row 2, Shelf 3</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="item-photo-expanded" id="itemPhotoExpanded" style="display: none;">
+                        <div class="expanded-header">
+                            <h4>Item Reference Photo</h4>
+                            <button class="collapse-button" id="collapsePhotoButton">
+                                <i class="fas fa-chevron-up"></i>
+                                <span>Collapse</span>
+                            </button>
+                        </div>
+                        <div class="photo-container">
+                            <img src="https://image2.pushauction.com/3/0/0/d3179b67-cdcf-4a58-b989-de5c9b6c783c/67c49028-3070-4a92-8562-fa79e8a04e10.jpg" 
+                                 alt="Wheel, Landing Gear (F-18)" 
+                                 class="expanded-photo">
+                            <div class="photo-caption">
+                                <strong>WHEEL, LANDING GEAR (F-18)</strong>
+                                <p>Reference image for verification purposes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="verification-columns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <!-- Left Column: Physical Count & Notes -->
+                    <div class="left-column">
+                        <!-- Physical Count Input -->
+                        <div class="form-group">
+                            <label for="physicalCount1">
+                                <i class="fas fa-calculator"></i>
+                                Verified Items Count
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="number" id="physicalCount1" name="physicalCount1" min="0" placeholder="Auto-populated from checkboxes" readonly>
+                                <div class="input-icon">
+                                    <i class="fas fa-hashtag"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group">
+                            <label for="notes">
+                                <i class="fas fa-sticky-note"></i>
+                                Notes / Discrepancy Explanation
+                            </label>
+                            <textarea id="notes" name="notes" rows="6" placeholder="Enter any notes or explanation for discrepancies found..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Photo Upload -->
+                    <div class="right-column">
+                        <!-- Photo Upload -->
+                        <div class="form-group">
+                            <label for="photoEvidence">
+                                <i class="fas fa-camera"></i>
+                                Upload Photo Evidence
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="photoEvidence" name="photoEvidence" accept="image/*" multiple>
+                                <div class="file-upload-area" id="fileUploadArea">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Click to upload or drag and drop</p>
+                                    <span>Supports: JPG, PNG, GIF (Max 1MB each for UiPath compatibility)</span>
+                                </div>
+                            </div>
+                            <div id="filePreview" class="file-preview"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons - Removed for UiPath integration -->
+                <!-- UiPath will handle submission logic -->
+            </div>
+        </div>
+
+        <!-- Status Indicator -->
+        <div class="status-indicator" id="statusIndicator">
+            <div class="status-content">
+                <i class="fas fa-clock"></i>
+                <span>Task Pending Verification</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

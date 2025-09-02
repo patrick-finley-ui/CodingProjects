@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depot/Logistician NRV Review - Inventory Valuation Discrepancy</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <i class="fas fa-warehouse"></i>
+                    <h1>Depot/Logistician NRV Review</h1>
+                </div>
+                <div class="status-badge pending">
+                    <i class="fas fa-clock"></i>
+                    Pending Review
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Item Information Section -->
+            <section class="card item-info">
+                <div class="card-header">
+                    <h2><i class="fas fa-box"></i> Item Information</h2>
+                </div>
+                <div class="card-content">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>NSN</label>
+                            <span class="value nsn">1630-01-222-3333</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Description</label>
+                            <span class="value description">Landing Gear Wheel</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Organization</label>
+                            <span class="value org">USA</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Quantity on Hand</label>
+                            <span class="value qty">7</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Carrying Method</label>
+                            <span class="value method">STD</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Current Carrying Unit Cost</label>
+                            <span class="value cost">$8,400.00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NRV Analysis Section -->
+            <section class="card nrv-analysis">
+                <div class="card-header">
+                    <h2><i class="fas fa-calculator"></i> NRV Analysis</h2>
+                    <span class="rule-id">Rule: EOU-NRV-02</span>
+                </div>
+                <div class="card-content">
+                    <div class="nrv-grid">
+                        <div class="nrv-item">
+                            <label>Average Scrap Proceeds per Unit</label>
+                            <span class="value scrap">$2,425.00</span>
+                        </div>
+                        <div class="nrv-item">
+                            <label>Average Disposal Cost per Unit</label>
+                            <span class="value disposal">$312.50</span>
+                        </div>
+                        <div class="nrv-item highlight">
+                            <label>Proposed NRV per Unit</label>
+                            <span class="value proposed">$2,112.50</span>
+                        </div>
+                        <div class="nrv-item impact">
+                            <label>Write-Down Impact</label>
+                            <span class="value impact">$6,287.50 per unit</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Condition Code Review Section -->
+            <section class="card condition-review">
+                <div class="card-header">
+                    <h2><i class="fas fa-clipboard-check"></i> Condition Code Review</h2>
+                </div>
+                <div class="card-content">
+                    <div class="condition-section">
+                        <div class="condition-current">
+                            <label>Suggested Condition Code</label>
+                            <div class="condition-badge suggested">G</div>
+                            <p class="condition-description">Unserviceable - Repairable</p>
+                        </div>
+                        <div class="condition-options">
+                            <label>Confirm or Adjust Condition Code:</label>
+                            <div class="condition-selector">
+                                <select id="conditionCode" class="form-select">
+                                    <option value="A">A - Serviceable</option>
+                                    <option value="B">B - Serviceable</option>
+                                    <option value="C">C - Serviceable</option>
+                                    <option value="D">D - Unserviceable - Repairable</option>
+                                    <option value="E">E - Unserviceable - Repairable</option>
+                                    <option value="F">F - Unserviceable - Repairable</option>
+                                    <option value="G" selected>G - Unserviceable - Repairable</option>
+                                    <option value="H">H - Unserviceable - Repairable</option>
+                                    <option value="J">J - Unserviceable - Repairable</option>
+                                    <option value="K">K - Unserviceable - Repairable</option>
+                                    <option value="L">L - Unserviceable - Repairable</option>
+                                    <option value="M">M - Unserviceable - Repairable</option>
+                                    <option value="N">N - Unserviceable - Repairable</option>
+                                    <option value="P">P - Unserviceable - Repairable</option>
+                                    <option value="Q">Q - Unserviceable - Repairable</option>
+                                    <option value="R">R - Unserviceable - Repairable</option>
+                                    <option value="S">S - Unserviceable - Repairable</option>
+                                    <option value="T">T - Unserviceable - Repairable</option>
+                                    <option value="U">U - Unserviceable - Repairable</option>
+                                    <option value="V">V - Unserviceable - Repairable</option>
+                                    <option value="W">W - Unserviceable - Repairable</option>
+                                    <option value="X">X - Unserviceable - Repairable</option>
+                                    <option value="Y">Y - Unserviceable - Repairable</option>
+                                    <option value="Z">Z - Unserviceable - Repairable</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Manual Adjustments Section -->
+            <section class="card manual-adjustments">
+                <div class="card-header">
+                    <h2><i class="fas fa-edit"></i> Manual Adjustments (Optional)</h2>
+                </div>
+                <div class="card-content">
+                    <div class="adjustment-grid">
+                        <div class="adjustment-item">
+                            <label>Adjust Scrap Proceeds per Unit</label>
+                            <div class="input-group">
+                                <span class="currency-symbol">$</span>
+                                <input type="number" id="scrapAdjustment" class="form-input" step="0.01"
+                                    placeholder="2,425.00">
+                            </div>
+                        </div>
+                        <div class="adjustment-item">
+                            <label>Adjust Disposal Cost per Unit</label>
+                            <div class="input-group">
+                                <span class="currency-symbol">$</span>
+                                <input type="number" id="disposalAdjustment" class="form-input" step="0.01"
+                                    placeholder="312.50">
+                            </div>
+                        </div>
+                        <div class="adjustment-item calculated">
+                            <label>Calculated NRV per Unit</label>
+                            <span class="value calculated-nrv">$2,112.50</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Documentation Upload Section -->
+            <section class="card documentation">
+                <div class="card-header">
+                    <h2><i class="fas fa-file-upload"></i> Supporting Documentation</h2>
+                </div>
+                <div class="card-content">
+                    <div class="upload-section">
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag and drop files here or click to browse</p>
+                            <input type="file" id="fileInput" multiple
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" style="display: none;">
+                        </div>
+                        <div class="uploaded-files" id="uploadedFiles">
+                            <!-- Uploaded files will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Comments Section -->
+            <section class="card comments">
+                <div class="card-header">
+                    <h2><i class="fas fa-comments"></i> Review Comments</h2>
+                </div>
+                <div class="card-content">
+                    <textarea id="reviewComments" class="form-textarea"
+                        placeholder="Enter your review comments, justification for condition code, or any other relevant information..."></textarea>
+                </div>
+            </section>
+
+            <!-- Decision Section -->
+            <section class="card decision">
+                <div class="card-header">
+                    <h2><i class="fas fa-gavel"></i> Review Decision</h2>
+                </div>
+                <div class="card-content">
+                    <div class="decision-buttons">
+                        <button class="btn btn-approve" id="approveBtn">
+                            <i class="fas fa-check"></i>
+                            Approve NRV Adjustment
+                        </button>
+                        <button class="btn btn-reject" id="rejectBtn">
+                            <i class="fas fa-times"></i>
+                            Reject NRV Adjustment
+                        </button>
+                        <button class="btn btn-hold" id="holdBtn">
+                            <i class="fas fa-pause"></i>
+                            Place on Hold
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 DoD Financial Management System - Depot/Logistician Review Module</p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Help</a>
+                    <a href="#" class="footer-link">Contact Support</a>
+                    <a href="#" class="footer-link">Documentation</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Confirm Decision</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Are you sure you want to proceed with this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+                <button class="btn" id="modalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div class="notification" id="successNotification">
+        <div class="notification-content">
+            <i class="fas fa-check-circle"></i>
+            <span id="notificationMessage">Action completed successfully</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
