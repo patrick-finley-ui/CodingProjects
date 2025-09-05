@@ -27,6 +27,7 @@ const elements = {
     uploadArea: null,
     fileInput: null,
     uploadedFiles: null,
+    rcicCode: null,
     reviewComments: null,
     approveBtn: null,
     rejectBtn: null,
@@ -103,6 +104,7 @@ function initializeElements() {
         elements.uploadArea = document.getElementById('uploadArea');
         elements.fileInput = document.getElementById('fileInput');
         elements.uploadedFiles = document.getElementById('uploadedFiles');
+        elements.rcicCode = document.getElementById('rcicCode');
         elements.reviewComments = document.getElementById('reviewComments');
         elements.approveBtn = document.getElementById('approveBtn');
         elements.rejectBtn = document.getElementById('rejectBtn');
@@ -139,6 +141,10 @@ function setupEventListeners() {
         console.error('disposalAdjustment element not found');
         return;
     }
+    if (!elements.rcicCode) {
+        console.error('rcicCode element not found');
+        return;
+    }
     if (!elements.reviewComments) {
         console.error('reviewComments element not found');
         return;
@@ -159,6 +165,11 @@ function setupEventListeners() {
     elements.disposalAdjustment.addEventListener('input', function() {
         updateCalculatedNRV();
         setVariable('disposalAdjustment', elements.disposalAdjustment.value);
+    });
+
+    // RCIC code change - update immediately on change
+    elements.rcicCode.addEventListener('change', function() {
+        setVariable('rcicCode', elements.rcicCode.value);
     });
 
     // Review comments change - update when user finishes typing (on blur)
@@ -469,6 +480,7 @@ function processReviewDecision(action) {
         timestamp: new Date().toISOString(),
         reviewer: 'Depot/Logistician', // This would come from authentication
         conditionCode: elements.conditionCode.value,
+        rcicCode: elements.rcicCode ? elements.rcicCode.value : '',
         scrapAdjustment: parseFloat(elements.scrapAdjustment.value) || currentData.nrv.avgScrapProceedsPerUnit,
         disposalAdjustment: parseFloat(elements.disposalAdjustment.value) || currentData.nrv.avgDisposalCostPerUnit,
         calculatedNRV: parseFloat(elements.calculatedNrv.textContent.replace('$', '')),
@@ -479,6 +491,7 @@ function processReviewDecision(action) {
     
     // Set the decision variable for UiPath
     setVariable('reviewDecision', action);
+    setVariable('rcicCode', reviewData.rcicCode);
     
     // Simulate API call
     simulateAPIProcessing(reviewData, action);
@@ -669,6 +682,14 @@ function initializeUiPathVariableListeners() {
                 }
             });
             
+            // Listen for rcicCode variable changes
+            App.onVariableChange('rcicCode', value => {
+                console.log('RcicCode variable changed:', value);
+                if (elements.rcicCode && elements.rcicCode.value !== value) {
+                    elements.rcicCode.value = value || '';
+                }
+            });
+            
             // Listen for reviewComments variable changes
             App.onVariableChange('reviewComments', value => {
                 console.log('ReviewComments variable changed:', value);
@@ -710,6 +731,12 @@ async function getInitialVariableValues() {
             const disposalAdjustmentValue = await App.getVariable('disposalAdjustment');
             if (disposalAdjustmentValue && elements.disposalAdjustment) {
                 elements.disposalAdjustment.value = disposalAdjustmentValue;
+            }
+            
+            // Get initial rcicCode value
+            const rcicCodeValue = await App.getVariable('rcicCode');
+            if (rcicCodeValue && elements.rcicCode) {
+                elements.rcicCode.value = rcicCodeValue;
             }
             
             // Get initial reviewComments value

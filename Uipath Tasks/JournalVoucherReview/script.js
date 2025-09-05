@@ -155,10 +155,11 @@ function initializeElements() {
         elements.docNsn = document.getElementById('docNsn');
         elements.viewDepotReport = document.getElementById('viewDepotReport');
         elements.viewSupportingDocs = document.getElementById('viewSupportingDocs');
-        elements.reviewComments = document.getElementById('reviewComments');
-        elements.approveBtn = document.getElementById('approveBtn');
-        elements.rejectBtn = document.getElementById('rejectBtn');
-        elements.holdBtn = document.getElementById('holdBtn');
+            elements.rcicCode = document.getElementById('rcicCode');
+    elements.reviewComments = document.getElementById('reviewComments');
+    elements.approveBtn = document.getElementById('approveBtn');
+    elements.rejectBtn = document.getElementById('rejectBtn');
+    elements.holdBtn = document.getElementById('holdBtn');
         elements.confirmationModal = document.getElementById('confirmationModal');
         elements.modalTitle = document.getElementById('modalTitle');
         elements.modalMessage = document.getElementById('modalMessage');
@@ -182,6 +183,10 @@ function initializeElements() {
 // Setup event listeners
 function setupEventListeners() {
     // Check if elements exist before adding listeners
+    if (!elements.rcicCode) {
+        console.error('rcicCode element not found');
+        return;
+    }
     if (!elements.reviewComments) {
         console.error('reviewComments element not found');
         return;
@@ -198,6 +203,12 @@ function setupEventListeners() {
         console.error('holdBtn element not found');
         return;
     }
+
+    // RCIC code change - update immediately on change
+    elements.rcicCode.addEventListener('change', function() {
+        setVariable('rcicCode', elements.rcicCode.value);
+        validateForm();
+    });
 
     // Review comments change - update when user finishes typing (on blur)
     elements.reviewComments.addEventListener('blur', function(e) {
@@ -344,8 +355,9 @@ function populateData() {
 
 // Form validation
 function validateForm() {
+    const rcicCode = elements.rcicCode ? elements.rcicCode.value : '';
     const comments = elements.reviewComments ? elements.reviewComments.value.trim() : '';
-    const isValid = comments.length >= 10;
+    const isValid = rcicCode !== '' && comments.length >= 10;
     
     // Update button states
     if (elements.approveBtn) {
@@ -356,6 +368,15 @@ function validateForm() {
     }
     if (elements.holdBtn) {
         elements.holdBtn.disabled = !isValid;
+    }
+    
+    // Update RCIC dropdown styling
+    if (elements.rcicCode) {
+        if (rcicCode === '') {
+            elements.rcicCode.style.borderColor = '#f59e0b';
+        } else {
+            elements.rcicCode.style.borderColor = '#e2e8f0';
+        }
     }
     
     // Update textarea styling
@@ -426,7 +447,13 @@ function handleModalConfirm() {
 
 // Validate review submission
 function validateReviewSubmission() {
+    const rcicCode = elements.rcicCode ? elements.rcicCode.value : '';
     const comments = elements.reviewComments ? elements.reviewComments.value.trim() : '';
+    
+    if (rcicCode === '') {
+        showNotification('Please select an RCIC code for inventory control.', 'error');
+        return false;
+    }
     
     if (comments.length < 10) {
         showNotification('Please provide review comments (minimum 10 characters).', 'error');
@@ -443,6 +470,7 @@ function processReviewDecision(action) {
         timestamp: new Date().toISOString(),
         reviewer: 'Finance Officer', // This would come from authentication
         task_id: jvData.journal_voucher_task.task_id,
+        rcic_code: elements.rcicCode ? elements.rcicCode.value : '',
         review_comments: elements.reviewComments ? elements.reviewComments.value.trim() : '',
         jv_summary: jvData.journal_voucher_task.jv_summary,
         accounting_entries: jvData.journal_voucher_task.accounting_entries,
@@ -451,6 +479,7 @@ function processReviewDecision(action) {
     
     // Set the decision variable for UiPath
     setVariable('jvDecision', action);
+    setVariable('rcicCode', reviewData.rcic_code);
     setVariable('jvComments', reviewData.review_comments);
     setVariable('jvTaskId', reviewData.task_id);
     
@@ -636,6 +665,15 @@ function initializeUiPathVariableListeners() {
     try {
         // Check if we're in UiPath environment
         if (typeof App !== 'undefined' && App.onVariableChange) {
+            // Listen for rcicCode variable changes
+            App.onVariableChange('rcicCode', value => {
+                console.log('RcicCode variable changed:', value);
+                if (elements.rcicCode && elements.rcicCode.value !== value) {
+                    elements.rcicCode.value = value || '';
+                    validateForm();
+                }
+            });
+            
             // Listen for reviewComments variable changes
             App.onVariableChange('reviewComments', value => {
                 console.log('ReviewComments variable changed:', value);
@@ -667,6 +705,13 @@ function initializeUiPathVariableListeners() {
 async function getInitialVariableValues() {
     try {
         if (typeof App !== 'undefined' && App.getVariable) {
+            // Get initial rcicCode value
+            const rcicCodeValue = await App.getVariable('rcicCode');
+            if (rcicCodeValue && elements.rcicCode) {
+                elements.rcicCode.value = rcicCodeValue;
+                validateForm();
+            }
+            
             // Get initial reviewComments value
             const reviewCommentsValue = await App.getVariable('reviewComments');
             if (reviewCommentsValue && elements.reviewComments) {

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:di="https://www.omg.org/spec/DMN/20191111/DI/"
+             xmlns:dc="https://www.omg.org/spec/DMN/20191111/DC/"
+             id="ValuationLogic"
+             name="InventoryValuationLogic"
+             namespace="http://example.com/dmn/valuation">
+
+  <!-- Input Data Definitions -->
+  <inputData id="inputData" name="ValuationInputs">
+    <variable id="categoryVar" name="category" typeRef="string"/>
+    <variable id="methodVar" name="method" typeRef="string"/>
+    <variable id="conditionVar" name="cond" typeRef="string"/>
+    <variable id="statusVar" name="status" typeRef="string"/>
+  </inputData>
+
+
+
+  <!-- Decision: Select Valuation Rule -->
+  <decision id="ValuationDecision" name="Select Valuation Rule">
+    <decisionTable id="ValuationDecisionTable" hitPolicy="UNIQUE">
+      <input id="cat" label="Category">
+        <inputExpression id="catExp" typeRef="string">
+          <text>inputData.category</text>
+        </inputExpression>
+      </input>
+      <input id="method" label="System Valuation Method">
+        <inputExpression id="methodExp" typeRef="string">
+          <text>inputData.method</text>
+        </inputExpression>
+      </input>
+      <input id="cond" label="Condition Code">
+        <inputExpression id="condExp" typeRef="string">
+          <text>inputData.cond</text>
+        </inputExpression>
+      </input>
+      <input id="status" label="Lifecycle Status">
+        <inputExpression id="statusExp" typeRef="string">
+          <text>inputData.status</text>
+        </inputExpression>
+      </input>
+
+      <output id="ruleOut" label="RuleID" typeRef="string"/>
+      <output id="descOut" label="RuleDescription" typeRef="string"/>
+
+      <!-- Rules -->
+
+      <!-- 1. EOU items always NRV -->
+      <rule id="r1">
+        <inputEntry id="cat1"><text>-</text></inputEntry>
+        <inputEntry id="method1"><text>-</text></inputEntry>
+        <inputEntry id="cond1"><text>"F","G","H"</text></inputEntry>
+        <inputEntry id="status1"><text>-</text></inputEntry>
+        <outputEntry id="o1"><text>"EOU-NRV-02"</text></outputEntry>
+        <outputEntry id="o1d"><text>"Write-down to Net Realizable Value"</text></outputEntry>
+      </rule>
+
+      <!-- 2. OM&S (historical cost) -->
+      <rule id="r2">
+        <inputEntry id="cat2"><text>"OM&S"</text></inputEntry>
+        <inputEntry id="method2"><text>-</text></inputEntry>
+        <inputEntry id="cond2"><text>"A","B","C"</text></inputEntry>
+        <inputEntry id="status2"><text>-</text></inputEntry>
+        <outputEntry id="o2"><text>"OMNS-HISTCOST-03"</text></outputEntry>
+        <outputEntry id="o2d"><text>"OM&S valued at historical cost"</text></outputEntry>
+      </rule>
+
+      <!-- 3. Opening balance remediation -->
+      <rule id="r3">
+        <inputEntry id="cat3"><text>-</text></inputEntry>
+        <inputEntry id="method3"><text>-</text></inputEntry>
+        <inputEntry id="cond3"><text>-</text></inputEntry>
+        <inputEntry id="status3"><text>"OpeningBalance"</text></inputEntry>
+        <outputEntry id="o3"><text>"OPENING-DEEMEDCOST-48-05"</text></outputEntry>
+        <outputEntry id="o3d"><text>"Deemed cost per SFFAS 48"</text></outputEntry>
+      </rule>
+
+      <!-- 4. Inventory - Moving Average -->
+      <rule id="r4">
+        <inputEntry id="cat4"><text>"Inventory"</text></inputEntry>
+        <inputEntry id="method4"><text>"MAC","WAC"</text></inputEntry>
+        <inputEntry id="cond4"><text>"A","B"</text></inputEntry>
+        <inputEntry id="status4"><text>-</text></inputEntry>
+        <outputEntry id="o4"><text>"INV-MAC-01"</text></outputEntry>
+        <outputEntry id="o4d"><text>"Moving Average Cost"</text></outputEntry>
+      </rule>
+
+      <!-- 5. Inventory - FIFO -->
+      <rule id="r5">
+        <inputEntry id="cat5"><text>"Inventory"</text></inputEntry>
+        <inputEntry id="method5"><text>"FIFO"</text></inputEntry>
+        <inputEntry id="cond5"><text>"A","B"</text></inputEntry>
+        <inputEntry id="status5"><text>-</text></inputEntry>
+        <outputEntry id="o5"><text>"INV-FIFO-01"</text></outputEntry>
+        <outputEntry id="o5d"><text>"First-In, First-Out valuation"</text></outputEntry>
+      </rule>
+
+      <!-- 6. Inventory - Standard Price -->
+      <rule id="r6">
+        <inputEntry id="cat6"><text>"Inventory"</text></inputEntry>
+        <inputEntry id="method6"><text>"STD"</text></inputEntry>
+        <inputEntry id="cond6"><text>"A","B"</text></inputEntry>
+        <inputEntry id="status6"><text>-</text></inputEntry>
+        <outputEntry id="o6"><text>"INV-STD-PRICE-01"</text></outputEntry>
+        <outputEntry id="o6d"><text>"Standard Price valuation"</text></outputEntry>
+      </rule>
+
+      <!-- 7. Fallback / Policy Check -->
+      <rule id="r7">
+        <inputEntry id="cat7"><text>-</text></inputEntry>
+        <inputEntry id="method7"><text>-</text></inputEntry>
+        <inputEntry id="cond7"><text>-</text></inputEntry>
+        <inputEntry id="status7"><text>-</text></inputEntry>
+        <outputEntry id="o7"><text>"INV-POLICY-CHECK-08"</text></outputEntry>
+        <outputEntry id="o7d"><text>"Non-compliant or unknown method – flag for review"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
