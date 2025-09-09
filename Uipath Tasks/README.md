@@ -1,53 +1,70 @@
-To Use this documentation, pull this repo or simply download and open in an AI IDE tool like Cursor or Claude Code
+To Use this documentation, pull this repo or simply download and open in an AI IDE tool like Cursor or Claude Code. 
 
 
-Prompt to Teach UiPath Custom HTML App Development with an AI IDE
-Core Task: You are a senior software developer specializing in front-end components for business process automation. Your goal is to create a complete, self-contained HTML component for a UiPath App/Action Center Task. This component will serve as a teaching example for others on how to use an AI IDE (like yourself) to build robust UiPath custom HTML apps.
 
-Scenario for the App: The application is for a <Your_Use_Case_Name>. A user will receive a task with details about a <Your_Task_Object>. They must review the information, potentially add comments, and then make a decision to either <Your_Action_1> or <Your_Action_2>.
 
-Technical and Pedagogical Requirements:
 
-Strict Adherence to Documentation: You must use the provided UiPath_Compatibility_Analysis.md document as your single source of truth. Your code must demonstrate an expert-level understanding of all key rules and patterns, including:
 
-No use of blocked browser APIs (window.alert, etc.).
+Transferring the Code to UiPath Action Center
+Once the AI IDE has provided the complete HTML, CSS, and JavaScript code in separate blocks, follow these steps to deploy it within UiPath.
 
-Implementing a custom showMessage function for alerts and confirmations.
+Step 1: Open the UiPath App
+Navigate to the UiPath App in which you want to host the custom component.
 
-A robust, multi-fallback initialization pattern.
+Go to the page or form where the component will be placed.
 
-Safe DOM element access and event listener setup (always check for existence).
+Step 2: Add the Custom HTML Component
+From the left-hand panel in the App designer, drag and drop a Custom HTML component onto your page.
 
-Use the provided setVariable and getVariable communication functions.
+Position the component where you want your application to appear.
 
-Bidirectional Variable Communication: The app must demonstrate seamless data flow between the UiPath environment and the HTML component.
+Step 3: Add CSS and JavaScript
+Add CSS:
 
-Receive from UiPath: The component should load initial values from the following UiPath variables:
+With the Custom HTML component selected, go to the right-hand Properties panel.
 
-<List_of_Input_Variables_and_their_Data_Types>
+Find the CSS section and paste the entire CSS code block.
 
-Send to UiPath: The component must push updated values to the following UiPath variables:
+Add JavaScript:
 
-<List_of_Output_Variables_and_their_Data_Types>
+Still in the Properties panel, find the JS section.
 
-UI/UX Design: The design should be a clean, modern, and professional dark-mode theme suitable for a business application. Use a minimal, utility-first CSS approach, but embed all styles directly within the HTML to ensure the component is self-contained. The layout should be easy to read and intuitive to navigate. Use clear labels and a hierarchical structure.
+Paste the entire JavaScript code block.
 
-Application Logic:
+Step 4: Paste the HTML Body Content
+Find the Source field in the Properties panel.
 
-The component should display the received <Task_Object> details in a clear, read-only format.
+Copy the content inside the <body> tag from the AI IDE's output and paste it here.
 
-Include a text area for the user to enter their <Comments_Variable>. This text area should update the UiPath variable only when the user's focus leaves the field (on blur), demonstrating an efficient approach for long-form input.
+Step 5: Link External Resources
+In the Properties panel, use the External Scripts and External Stylesheets sections to add URLs for any external libraries.
 
-Two prominent action buttons, <Your_Action_1> and <Your_Action_2>, must be present.
+Step 6: Configure App Variables
+This is a crucial step to link the HTML component to your UiPath workflow.
 
-Clicking either button must trigger a custom confirmation modal before setting the <Your_Decision_Variable>.
+In the UiPath Apps designer, go to the Variables section.
 
-<A_Specific_Conditional_Logic_to_Implement> (e.g., "The <A_Specific_Input_Variable> variable received from UiPath should influence the UI. If the <A_Specific_Input_Variable> is <A_Specific_Value>, display a clear visual warning to the user, like a red or orange highlight.")
+Create a new App variable for each variable specified in the AI's prompt.
 
-Output Format (Pedagogical):
+Select the Custom HTML component.
 
-Provide the complete, production-ready HTML, CSS, and JavaScript in a single, well-commented code block.
+In the Properties panel, find the Input Properties and Output Properties sections.
 
-The comments should not only explain what the code does, but why it's written that way, explicitly referencing the rules from the UiPath_Compatibility_Analysis.md document (e.g., "Using if (element) check to follow the safe DOM access rule.").
+Add the necessary variables to these sections to establish the data flow.
 
-Conclude with a brief summary of the key learning points demonstrated in the code.
+Step 7: Configure for Action Center (if applicable)
+If this component is part of an Action Center task, you must create an Action Schema and use a UiPath button to submit the data. The Custom HTML component's App.setVariable calls will populate the action schema variable.
+
+Create an Action Schema:
+
+In your UiPath process, define a data structure that mirrors the variables you want to pass out. For our example, you would create an object with fields for finalDecision and reviewerComments. This structure is your Action Schema.
+
+Use a UiPath Button:
+
+Place a standard UiPath Button outside of your Custom HTML component. This button will be your submit button.
+
+In the button's Events panel, configure the Click event.
+
+Add an Set Value rule to the button's click event. For each variable you want to pass out, set an action schema variable equal to the corresponding App variable (e.g., ActionSchema.finalDecision = App.finalDecision).
+
+This approach ensures that your data is correctly packaged and submitted back to the Orchestrator flow for processing once the user completes the action.
