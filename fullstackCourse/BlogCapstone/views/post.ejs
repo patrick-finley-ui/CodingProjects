@@ -1,0 +1,17 @@
+<%- include("partials/header.ejs") %>
+
+    <body>
+        <div class="container">
+            <h1>
+                <%= post.title %>
+            </h1>
+            <div class="post-content">
+                <div class="ql-editor"><%- post.content %></div>
+            </div>
+            <div class="post-actions">
+                <a href="/" class="btn btn-primary">← Back to Home</a>
+            </div>
+        </div>
+    </body>
+
+    <%- include("partials/footer.ejs") %>

@@ -1,0 +1,64 @@
+<%- include("partials/header.ejs") %>
+
+    <body>
+        <h1>Write a New Blog</h1>
+        <form action="/" method="POST" class="blog-form">
+            <div class="form-group">
+                <label for="title">Blog Post Title:</label>
+                <input name="Title" type="text" class="form-control" id="title" placeholder="Enter your blog post title"
+                    required />
+            </div>
+
+            <div class="form-group">
+                <label for="content">Blog Content:</label>
+                <div id="editor" style="height: 300px;"></div>
+                <textarea name="PostText" id="content" style="display: none;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-lg">Publish Post</button>
+            </div>
+        </form>
+
+        <% if(locals.blogPosts && blogPosts.length> 0){ %>
+            <% blogPosts.forEach((post, index)=> { %>
+                <h1>
+                    <a href="/post/<%= post.id %>">
+                        <%= post.title %>
+                    </a>
+                </h1>
+                <p>Created: <%= post.createdAt.toLocaleDateString() %>
+                </p>
+                <% });%>
+                    <% } %>
+
+    </body>
+
+    <script>
+        // Initialize Quill editor
+        var quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'indent': '-1' }, { 'indent': '+1' }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+
+        // Handle form submission
+        document.querySelector('.blog-form').addEventListener('submit', function (e) {
+            // Get the HTML content from Quill
+            var content = quill.root.innerHTML;
+
+            // Set the hidden textarea value
+            document.getElementById('content').value = content;
+        });
+    </script>
+
+    <%- include("partials/footer.ejs") %>
