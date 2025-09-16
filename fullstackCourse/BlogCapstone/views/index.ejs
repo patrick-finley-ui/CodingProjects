@@ -1,64 +1,160 @@
-<%- include("partials/header.ejs") %>
+<%- include("partials/header.ejs", {navLinks: navLinks}) %>
 
     <body>
-        <h1>Write a New Blog</h1>
-        <form action="/" method="POST" class="blog-form">
-            <div class="form-group">
-                <label for="title">Blog Post Title:</label>
-                <input name="Title" type="text" class="form-control" id="title" placeholder="Enter your blog post title"
-                    required />
-            </div>
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Left Column: Blog List -->
+                <div class="col-md-4 col-lg-3 bg-light p-4" style="min-height: calc(100vh - 76px);">
+                    <h3 class="mb-4">Recent Posts</h3>
 
-            <div class="form-group">
-                <label for="content">Blog Content:</label>
-                <div id="editor" style="height: 300px;"></div>
-                <textarea name="PostText" id="content" style="display: none;"></textarea>
-            </div>
+                    <!-- Back to All Posts button - Only show on filtered pages -->
+                    <% if(locals.currentFilter && !locals.showFilters) { %>
+                        <div class="mb-3">
+                            <a href="/" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-left"></i> Back to All Posts
+                            </a>
 
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary btn-lg">Publish Post</button>
-            </div>
-        </form>
+                            <% } %>
+                                <% if(locals.blogPosts && blogPosts.length> 0){ %>
+                                    <!-- Filter Buttons - Only show on home page -->
+                                    <% if(locals.showFilters) { %>
+                                        <div class="mb-3">
+                                            <button class="btn btn-sm btn-outline-primary me-1 mb-1"
+                                                onclick="filterPosts('all')">All</button>
+                                            <button class="btn btn-sm btn-outline-primary me-1 mb-1"
+                                                onclick="filterPosts('food-cooking')">Food</button>
+                                            <button class="btn btn-sm btn-outline-primary me-1 mb-1"
+                                                onclick="filterPosts('travel')">Travel</button>
+                                            <button class="btn btn-sm btn-outline-primary me-1 mb-1"
+                                                onclick="filterPosts('health-wellness')">Health</button>
+                                            <button class="btn btn-sm btn-outline-primary me-1 mb-1"
+                                                onclick="filterPosts('arts-crafts')">Arts</button>
+                                            <button class="btn btn-sm btn-outline-primary me-1 mb-1"
+                                                onclick="filterPosts('books-writing')">Books</button>
+                                            <button class="btn btn-sm btn-outline-primary me-1 mb-1"
+                                                onclick="filterPosts('gaming')">Gaming</button>
+                                        </div>
+                                        <% } %>
 
-        <% if(locals.blogPosts && blogPosts.length> 0){ %>
-            <% blogPosts.forEach((post, index)=> { %>
-                <h1>
-                    <a href="/post/<%= post.id %>">
-                        <%= post.title %>
-                    </a>
-                </h1>
-                <p>Created: <%= post.createdAt.toLocaleDateString() %>
-                </p>
-                <% });%>
-                    <% } %>
+                                            <div class="blog-list" id="blog-list">
+                                                <% blogPosts.slice().reverse().forEach((post, index)=> { %>
+                                                    <div class="card mb-3 blog-card"
+                                                        data-blog-area="<%= post.blogArea %>">
+                                                        <div class="card-body">
+                                                            <h6 class="card-title">
+                                                                <a href="/post/<%= post.id %>"
+                                                                    class="text-decoration-none">
+                                                                    <%= post.title %>
+                                                                </a>
+                                                            </h6>
+                                                            <p class="card-text text-muted small">
+                                                                <i class="bi bi-calendar"></i>
+                                                                <%= new Date(post.createdAt).toLocaleDateString() %>
+                                                                    <br>
+                                                                    <i class="bi bi-person"></i>
+                                                                    <%= post.author %>
+                                                            </p>
+                                                            <span class="badge bg-primary">
+                                                                <%= post.blogArea %>
+                                                            </span>
+                                                            <div class="post-preview">
+                                                                <%- post.content.substring(0, 100) %>...
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <% }); %>
+                                            </div>
+                                            <% } else { %>
+                                                <div class="text-center text-muted">
+                                                    <i class="bi bi-journal-text" style="font-size: 3rem;"></i>
+                                                    <p class="mt-3">No posts yet.<br>Create your first blog post!</p>
+                                                </div>
+                                                <% } %>
+                        </div>
+                </div>
+
+                <!-- Right Column: Blog Form -->
+                <div class="col-md-8 col-lg-9 p-4">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8">
+                            <!-- Success Message for Deleted Post -->
+                            <% if(locals.deleted) { %>
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-check-circle"></i> Post deleted successfully!
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
+                                </div>
+                                <% } %>
+
+                                    <!-- Success Message for Updated Post -->
+                                    <% if(locals.updated) { %>
+                                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                            <i class="bi bi-check-circle"></i> Post updated successfully!
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <% } %>
+
+                                            <h1 class="mb-4">
+                                                <%= locals.isEditMode ? 'Edit Blog Post' : 'Write a New Blog Post' %>
+                                            </h1>
+                                            <%- include("partials/form.ejs", {editingPost: locals.editingPost,
+                                                isEditMode: locals.isEditMode}) %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </body>
 
     <script>
-        // Initialize Quill editor
-        var quill = new Quill('#editor', {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    [{ 'indent': '-1' }, { 'indent': '+1' }],
-                    ['link', 'image'],
-                    ['clean']
-                ]
+
+        // Filter posts by blog area
+        function filterPosts(blogArea) {
+            const cards = document.querySelectorAll('.blog-card');
+            const buttons = document.querySelectorAll('.btn-outline-primary');
+
+            // Update button states
+            buttons.forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+
+            // Highlight active button
+            event.target.classList.remove('btn-outline-primary');
+            event.target.classList.add('btn-primary');
+
+            // Show/hide cards based on filter
+            cards.forEach(card => {
+                if (blogArea === 'all' || card.dataset.blogArea === blogArea) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Function to view stored delete logs (for debugging)
+        function viewDeleteLogs() {
+            const logs = JSON.parse(localStorage.getItem('deleteLogs') || '[]');
+            console.log('=== STORED DELETE LOGS ===');
+            if (logs.length === 0) {
+                console.log('No delete logs found. Try deleting a post first.');
+            } else {
+                logs.forEach(log => {
+                    console.log(`[${log.timestamp}] ${log.message}`, log.data);
+                });
             }
-        });
+        }
 
-        // Handle form submission
-        document.querySelector('.blog-form').addEventListener('submit', function (e) {
-            // Get the HTML content from Quill
-            var content = quill.root.innerHTML;
+        // Make it available globally for debugging
+        window.viewDeleteLogs = viewDeleteLogs;
 
-            // Set the hidden textarea value
-            document.getElementById('content').value = content;
-        });
+        // Auto-show logs if there are any (for debugging)
+        if (localStorage.getItem('deleteLogs')) {
+            console.log('💡 Tip: Type viewDeleteLogs() to see stored delete logs');
+        }
     </script>
 
     <%- include("partials/footer.ejs") %>

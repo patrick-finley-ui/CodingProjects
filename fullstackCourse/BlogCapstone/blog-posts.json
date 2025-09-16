@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "title": "My Favorite Food",
+    "content": "<ol><li>Mexican</li><li>American</li><li>Thai</li><li>Italian</li><li>Mediterranean</li><li>Indian</li><li>Other Asian</li></ol>",
+    "createdAt": "2025-09-16T12:57:14.690Z",
+    "author": "Anonymous",
+    "tags": [],
+    "views": 0,
+    "blogArea": "food-cooking"
+  },
+  {
+    "id": 2,
+    "title": "My Favorite Stadiums",
+    "content": "<ol><li>Citizens Bank Park</li><li>Linc</li><li>Coors Field</li><li>Orioles</li></ol><p><br></p><p><br></p><p><br></p><p><br></p><p><br></p><p><br></p><p><br></p><p>..... 100. Fedex</p>",
+    "createdAt": "2025-09-16T13:27:47.092Z",
+    "author": "Anonymous",
+    "tags": [],
+    "views": 0,
+    "blogArea": "travel"
+  }
+]

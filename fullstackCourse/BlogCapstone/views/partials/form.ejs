@@ -1,0 +1,86 @@
+<form action="<%= locals.isEditMode ? '/edit/' + editingPost.id : '/' %>" method="POST" class="blog-form">
+
+    <div class="mb-3">
+        <label for="title" class="form-label">Blog Post Title:</label>
+        <input name="Title" type="text" class="form-control form-control-lg" id="title"
+            placeholder="Enter your blog post title" value="<%= locals.editingPost ? editingPost.title : '' %>"
+            required />
+    </div>
+    <div class="mb-3">
+        <div class="mb-3">
+            <label for="blog-areas">Choose a blog area:</label>
+            <select id="blog-areas" name="blogArea" class="form-control">
+                <option value="food-cooking" <%=locals.editingPost && editingPost.blogArea==='food-cooking' ? 'selected'
+                    : '' %>>Food and Cooking</option>
+                <option value="travel" <%=locals.editingPost && editingPost.blogArea==='travel' ? 'selected' : '' %>
+                    >Travel</option>
+                <option value="health-wellness" <%=locals.editingPost && editingPost.blogArea==='health-wellness'
+                    ? 'selected' : '' %>>Health and Wellness</option>
+                <option value="arts-crafts" <%=locals.editingPost && editingPost.blogArea==='arts-crafts' ? 'selected'
+                    : '' %>>Arts and Crafts</option>
+                <option value="books-writing" <%=locals.editingPost && editingPost.blogArea==='books-writing'
+                    ? 'selected' : '' %>>Books and Writing</option>
+                <option value="gaming" <%=locals.editingPost && editingPost.blogArea==='gaming' ? 'selected' : '' %>
+                    >Gaming</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="content" class="form-label">Blog Content:</label>
+        <div id="editor" style="height: 400px; border: 1px solid #ced4da; border-radius: 0.375rem;">
+        </div>
+        <textarea name="PostText" id="content" style="display: none;"></textarea>
+        <!-- Hidden field to store existing content for editing -->
+        <% if (locals.editingPost && editingPost.content) { %>
+            <input type="hidden" id="existingContent" value="<%= editingPost.content %>">
+            <% } %>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <button type="submit" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-<%= locals.isEditMode ? 'check' : 'send' %>"></i>
+            <%= locals.isEditMode ? 'Update Post' : 'Publish Post' %>
+        </button>
+    </div>
+</form>
+
+<script>
+    // Initialize Quill editor
+    var quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                [{ 'indent': '-1' }, { 'indent': '+1' }],
+                ['link', 'image'],
+                ['clean']
+            ]
+        }
+    });
+
+    // Set existing content if editing
+    var existingContentField = document.getElementById('existingContent');
+    if (existingContentField) {
+        quill.root.innerHTML = existingContentField.value;
+    }
+
+    // Handle form submission
+    document.querySelector('.blog-form').addEventListener('submit', function (e) {
+        // Get the HTML content from Quill
+        var content = quill.root.innerHTML;
+
+        // Debug logging
+        console.log('Quill content:', content);
+        console.log('Content length:', content.length);
+
+        // Set the hidden textarea value
+        document.getElementById('content').value = content;
+
+        // Debug logging
+        console.log('Textarea value set:', document.getElementById('content').value);
+    });
+</script>
