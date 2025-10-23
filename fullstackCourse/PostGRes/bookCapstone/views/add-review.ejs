@@ -1,0 +1,33 @@
+<%- include('partials/header') %>
+    <div class="container">
+        <h1 class="mb-4">Add Review</h1>
+        <form action="/add-review" method="post">
+            <div class="mb-3">
+                <label for="titleInput" class="form-label">Title</label>
+                <input type="text" class="form-control" id="titleInput" name="title" placeholder="Title">
+            </div>
+            <div class="mb-3">
+                <label for="authorInput" class="form-label">Author</label>
+                <input type="text" class="form-control" id="authorInput" name="author" placeholder="Author">
+            </div>
+            <div class="mb-3">
+                <label for="isbnInput" class="form-label">ISBN</label>
+                <input type="text" class="form-control" id="isbnInput" name="isbn" placeholder="ISBN">
+            </div>
+            <div class="mb-3">
+                <label for="publishedYearInput" class="form-label">Published Year</label>
+                <input type="text" class="form-control" id="publishedYearInput" name="published_year"
+                    placeholder="Published Year">
+            </div>
+            <div class="mb-3">
+                <label for="genreInput" class="form-label">Genre</label>
+                <input type="text" class="form-control" id="genreInput" name="genre" placeholder="Genre">
+            </div>
+            <div class="mb-3">
+                <label for="imageInput" class="form-label">Image URL</label>
+                <input type="text" class="form-control" id="imageInput" name="image" placeholder="Image URL">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Review</button>
+        </form>
+    </div>
+    <%- include('partials/footer') %>

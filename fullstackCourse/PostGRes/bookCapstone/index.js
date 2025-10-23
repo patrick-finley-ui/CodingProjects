@@ -25,7 +25,22 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 
+app.get("/add-review", (req, res) => {
+  res.render("add-review.ejs");
+});
 
+
+app.post("/add-review", async (req, res) => {
+  const book = req.body;
+  try {
+    const book = await db.query("INSERT INTO books (title, author, isbn, published_year, genre, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", [book.title, book.author, book.isbn, book.published_year, book.genre, book.image]);
+    const review = await db.query("INSERT INTO reviews (book_id,rating, notes, review_date) VALUES ($1, $2, $3, $4) RETURNING *", [book.id, book.rating, book.notes, book.review_date]);
+    res.redirect("/");
+  } catch (error) {
+    console.error("Error adding book", error);
+    res.status(500).send("An error occurred while adding the book.");
+  }
+});
 
 app.get("/", async (req, res) => {
   try {
@@ -60,6 +75,10 @@ app.get("/", async (req, res) => {
     res.status(500).send("An error occurred while fetching books.");
   }
 });
+
+
+
+
 
 
 
