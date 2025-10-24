@@ -32,9 +32,20 @@ app.get("/add-review", (req, res) => {
 
 app.post("/add-review", async (req, res) => {
   const book = req.body;
+  console.log(book);
   try {
-    const book = await db.query("INSERT INTO books (title, author, isbn, published_year, genre, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", [book.title, book.author, book.isbn, book.published_year, book.genre, book.image]);
-    const review = await db.query("INSERT INTO reviews (book_id,rating, notes, review_date) VALUES ($1, $2, $3, $4) RETURNING *", [book.id, book.rating, book.notes, book.review_date]);
+    const bookResult = await db.query("INSERT INTO books (title, author, isbn, published_year, genre) VALUES ($1, $2, $3, $4, $5) RETURNING *", [book.title, book.author, book.isbn, book.published_year, book.genre]);
+    console.log(bookResult.rows[0]);
+    const reviewResult = await db.query(
+      "INSERT INTO reviews (book_id, rating, notes, review_date) VALUES ($1, $2, $3, $4) RETURNING *",
+      [
+        bookResult.rows[0].book_id,
+        book.rating,
+        book.notes,
+        new Date()
+      ]
+    );
+    console.log("Review added", reviewResult.rows[0]);
     res.redirect("/");
   } catch (error) {
     console.error("Error adding book", error);
@@ -44,8 +55,8 @@ app.post("/add-review", async (req, res) => {
 
 app.get("/", async (req, res) => {
   try {
-    const books = await db.query("SELECT * FROM book");
-    console.log(books.rows);
+    const books = await db.query("SELECT * FROM books");
+ 
 
     // Attempt to fetch covers for each book and update the image field
     const updatedBooks = await Promise.all(
@@ -56,7 +67,7 @@ app.get("/", async (req, res) => {
             `https://openlibrary.org/api/books?bibkeys=ISBN:${book.isbn}&jscmd=data&format=json`
           );
           const data = response.data;
-          console.log(data);
+      
           const coverData = data[`ISBN:${book.isbn}`];
           if (coverData && coverData.cover && coverData.cover.medium) {
             // Replace the image only if cover is found
@@ -77,10 +88,42 @@ app.get("/", async (req, res) => {
 });
 
 
+app.get("/book/:id", async (req,res) => {
+  const bookId = req.params.id;
+  console.log(bookId);
+  const book = await db.query("SELECT * FROM books JOIN reviews ON books.book_id = reviews.book_id WHERE books.book_id = $1", [bookId]);
+  console.log(book.rows[0]);
+  const image = await axios.get(`https://openlibrary.org/api/books?bibkeys=ISBN:${book.rows[0].isbn}&jscmd=data&format=json`);
+  book.rows[0].image = image.data[`ISBN:${book.rows[0].isbn}`].cover.medium;
+  console.log(book.rows[0]);
+  res.render("book.ejs", { book: book.rows[0] });
+});
 
 
 
+app.get("/edit-book/:id", async (req,res) => {
+  const bookId = req.params.id;
+  const book = await db.query("SELECT * FROM books JOIN reviews ON books.book_id = reviews.book_id WHERE books.book_id = $1", [bookId]);
+  console.log("Edit book", book.rows[0]);
+  res.render("edit-review.ejs", { book: book.rows[0] });
+});
 
+app.post("/edit-book/:id", async (req,res) => {
+  const bookId = req.params.id;
+  const book = req.body;
+  console.log(book);
+  const bookResult = await db.query("UPDATE books SET title = $1, author = $2, isbn = $3, published_year = $4, genre = $5 WHERE book_id = $6", [book.title, book.author, book.isbn, book.published_year, book.genre, bookId]);
+  console.log(bookResult.rows[0]);
+  res.redirect("/");
+});
+
+
+app.post("/delete-book/:id", async (req,res) => {
+  const bookId = req.params.id;
+  const book = await db.query("DELETE FROM books WHERE book_id = $1", [bookId]);
+  console.log(book.rows[0]);
+  res.redirect("/");
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

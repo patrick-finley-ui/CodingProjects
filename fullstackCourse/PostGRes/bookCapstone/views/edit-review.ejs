@@ -1,57 +1,66 @@
 <%- include('partials/header') %>
     <div class="container">
-        <h1 class="mb-4">Add Review</h1>
-        <form action="/add-review" method="post">
+        <h1 class="mb-4">Edit Review</h1>
+        <form action="/edit-book/<%= book.book_id %>" method="post">
             <div class="mb-3">
                 <label for="titleInput" class="form-label">Title</label>
-                <input type="text" class="form-control" id="titleInput" name="title" placeholder="Title">
+                <input type="text" class="form-control" id="titleInput" name="title" placeholder="Title"
+                    value="<%= book.title %>">
             </div>
             <div class="mb-3">
                 <label for="authorInput" class="form-label">Author</label>
-                <input type="text" class="form-control" id="authorInput" name="author" placeholder="Author">
+                <input type="text" class="form-control" id="authorInput" name="author" placeholder="Author"
+                    value="<%= book.author %>">
             </div>
             <div class="mb-3">
                 <label for="isbnInput" class="form-label">ISBN</label>
-                <input type="text" class="form-control" id="isbnInput" name="isbn" placeholder="ISBN">
+                <input type="text" class="form-control" id="isbnInput" name="isbn" placeholder="ISBN"
+                    value="<%= book.isbn %>">
             </div>
             <div class="mb-3">
                 <label for="publishedYearInput" class="form-label">Published Year</label>
                 <input type="text" class="form-control" id="publishedYearInput" name="published_year"
-                    placeholder="Published Year">
+                    placeholder="Published Year" value="<%= book.published_year %>">
             </div>
             <div class="mb-3">
                 <label for="genreInput" class="form-label">Genre</label>
-                <input type="text" class="form-control" id="genreInput" name="genre" placeholder="Genre">
+                <input type="text" class="form-control" id="genreInput" name="genre" placeholder="Genre"
+                    value="<%= book.genre %>">
             </div>
             <div class="mb-3">
                 <label class="form-label d-block mb-2">Rating</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="rating" id="rating1" value="1">
+                    <input class="form-check-input" type="radio" name="rating" id="rating1" value="1" <%=book.rating==1
+                        ? "checked" : "" %>>
                     <label class="form-check-label" for="rating1">1</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="rating" id="rating2" value="2">
+                    <input class="form-check-input" type="radio" name="rating" id="rating2" value="2" <%=book.rating==2
+                        ? "checked" : "" %>>
                     <label class="form-check-label" for="rating2">2</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="rating" id="rating3" value="3">
+                    <input class="form-check-input" type="radio" name="rating" id="rating3" value="3" <%=book.rating==3
+                        ? "checked" : "" %>>
                     <label class="form-check-label" for="rating3">3</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="rating" id="rating4" value="4">
+                    <input class="form-check-input" type="radio" name="rating" id="rating4" value="4" <%=book.rating==4
+                        ? "checked" : "" %>>
                     <label class="form-check-label" for="rating4">4</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="rating" id="rating5" value="5">
+                    <input class="form-check-input" type="radio" name="rating" id="rating5" value="5" <%=book.rating==5
+                        ? "checked" : "" %>>
                     <label class="form-check-label" for="rating5">5</label>
                 </div>
             </div>
             <div class="mb-3">
                 <label for="notesInput" class="form-label">Review Notes</label>
                 <textarea class="form-control" id="notesInput" name="notes" rows="5"
-                    placeholder="Write your review here..."></textarea>
+                    placeholder="Write your review here..."><%= book.notes %></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Add Review</button>
+            <button type="submit" class="btn btn-primary">Update Review</button>
         </form>
     </div>
     <%- include('partials/footer') %>

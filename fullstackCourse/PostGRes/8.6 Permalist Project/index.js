@@ -20,6 +20,9 @@ db.connect();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+// Set EJS as the view engine
+app.set("view engine", "ejs");
+
 let currentUserId = 1;
 // Call the function on startup
 ensureItemsTable();
@@ -27,7 +30,7 @@ ensureItemsTable();
 let items = await getItems();
 
 async function getItems() {
-  const result = await db.query("SELECT * FROM items");
+  const result = await db.query("SELECT * FROM items order by ID ASC");
   return result.rows;
 }
 

@@ -9,7 +9,9 @@
         <div class="row">
             <% books.forEach(function(book) { %>
                 <div class="col-md-4 mb-4">
-                    <div class="card h-100">
+                    <div class="card h-100" onclick="window.location.href='/book/<%= book.book_id %>'"
+                        style="cursor: pointer;" onmouseover="this.style.backgroundColor='#f0f0f0'"
+                        onmouseout="this.style.backgroundColor='white'">
                         <% if (book.image) { %>
                             <img src="<%= book.image %>" class="card-img-top" alt="Cover image of <%= book.title %>">
                             <% } %>

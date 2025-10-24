@@ -19,6 +19,9 @@ db.connect();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+// Set EJS as the view engine
+app.set("view engine", "ejs");
+
 let currentUserId = 1;
 
 let users = await getUserList();
