@@ -1,4 +1,18 @@
 <%- include('partials/header') %>
+
+    <div class="container mb-4 d-flex justify-content-start">
+        <div class="btn-group me-2" role="group" aria-label="Sort filters">
+            <a href="?sort=rating" class="btn btn-outline-secondary<%= sortby === 'rating' ? ' active' : '' %>"
+                title="Sort by Rating">
+                <i class="bi bi-filter"></i> Rating
+            </a>
+            <a href="?sort=review_date"
+                class="btn btn-outline-secondary<%= sortby === 'review_date' ? ' active' : '' %>"
+                title="Sort by Date Added">
+                <i class="bi bi-calendar3"></i> Date Added
+            </a>
+        </div>
+    </div>
     <div class="container mb-4 d-flex justify-content-end">
         <a href="/add-review" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add Review
@@ -30,6 +44,13 @@
                                     <p class="card-text mb-2">
                                         Genre: <%= book.genre %>
                                     </p>
+                                    <p class="card-text mb-2">
+                                        Date Added: <%= new Date(book.review_date).toLocaleDateString() %>
+                                    </p>
+                                    <p class="card-text mb-2">
+                                        Rating: <%= book.rating %>
+                                    </p>
+
                                 </div>
                     </div>
                 </div>
