@@ -1,0 +1,3 @@
+[submodule "Uipath Tasks/invoice-match-bot"]
+	path = Uipath Tasks/invoice-match-bot
+	url = https://github.com/patrick-finley-ui/invoice-match-bot.git
