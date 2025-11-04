@@ -1,71 +1,50 @@
-import { useState, useEffect } from 'react'
-import { UiPath } from '@uipath/uipath-typescript'
-import InvoiceGrid from './components/InvoiceGrid'
-import './App.css'
+import { AuthProvider } from './hooks/useAuth'
+import { useAuth } from './hooks/useAuth'
+import { LoginScreen } from './components/LoginScreen'
+import { Dashboard } from './components/Dashboard'
+import type { UiPathSDKConfig } from '@uipath/uipath-typescript'
 
-function App() {
-  const [sdk, setSdk] = useState<UiPath | null>(null)
-  const [isInitialized, setIsInitialized] = useState(false)
-  const [initError, setInitError] = useState<string | null>(null)
+const authConfig: UiPathSDKConfig = {
+  clientId: import.meta.env.VITE_UIPATH_CLIENT_ID || 'your-client-id',
+  orgName: import.meta.env.VITE_UIPATH_ORG_NAME || 'your-organization',
+  tenantName: import.meta.env.VITE_UIPATH_TENANT_NAME || 'your-tenant',
+  baseUrl: import.meta.env.VITE_UIPATH_BASE_URL || 'https://staging.uipath.com/',
+  redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI || window.location.origin,
+  scope: import.meta.env.VITE_UIPATH_SCOPE || 'offline_access',
+}
 
-  const initializeSDK = async () => {
-    try {
-      const sdkInstance = new UiPath({
-        baseUrl: import.meta.env.VITE_UIPATH_BASE_URL || 'https://cloud.uipath.com',
-        orgName: import.meta.env.VITE_UIPATH_ORG_NAME!,
-        tenantName: import.meta.env.VITE_UIPATH_TENANT_NAME!,
-        clientId: import.meta.env.VITE_UIPATH_CLIENT_ID!,
-        redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI || 'http://localhost:5173',
-        scope: import.meta.env.VITE_UIPATH_SCOPE!
-      })
-      setSdk(sdkInstance)
-      
-      // Initialize OAuth flow
-      await sdkInstance.initialize()
-      setIsInitialized(true)
-      setInitError(null)
-    } catch (error) {
-      console.error('Failed to initialize SDK:', error)
-      setInitError(error instanceof Error ? error.message : 'Failed to initialize SDK')
-    }
-  }
+function AppContent() {
+  const { isAuthenticated, isLoading, sdk } = useAuth()
 
-  useEffect(() => {
-    // Auto-initialize on mount
-    initializeSDK()
-  }, [])
-
-  if (!sdk || !isInitialized) {
+  if (isLoading) {
     return (
-      <div className="app-container">
-        <div className="loading-container">
-          {initError ? (
-            <>
-              <h2>Configuration Error</h2>
-              <p>{initError}</p>
-              <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>
-                Please check your .env file configuration
-              </p>
-              <button onClick={initializeSDK} style={{ marginTop: '1rem' }}>Retry</button>
-            </>
-          ) : (
-            <>
-              <div className="spinner"></div>
-              <p>Initializing UiPath SDK...</p>
-            </>
-          )}
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-uipath-orange"></div>
+        <span className="ml-3 text-gray-600">Initializing Invoice Processing App...</span>
       </div>
     )
   }
 
+  if (!isAuthenticated) {
+    return <LoginScreen />
+  }
+
+  if (!sdk) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-red-600">SDK not initialized</p>
+      </div>
+    )
+  }
+
+  return <Dashboard sdk={sdk} />
+}
+
+function App() {
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1>Invoice Processing App</h1>
-      </header>
-      <InvoiceGrid sdk={sdk} />
-    </div>
+    <AuthProvider config={authConfig}>
+      <AppContent />
+    </AuthProvider>
   )
 }
 

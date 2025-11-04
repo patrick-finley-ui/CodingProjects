@@ -1,147 +1,301 @@
-import { useState, useEffect } from 'react'
-import { UiPath } from '@uipath/uipath-typescript'
-import type { EntityRecord } from '@uipath/uipath-typescript'
-import './InvoiceGrid.css'
+import { useState, useMemo } from 'react';
+import type { InvoiceRecord } from '../types/invoices';
+import { formatCurrency, formatDate, getStatusColor } from '../utils/formatters';
+
+type SortField = 'invoiceId' | 'vendorName' | 'invoiceTotal' | 'status' | 'acceptanceDate' | 'updateTime';
+type SortDirection = 'asc' | 'desc';
 
 interface InvoiceGridProps {
-  sdk: UiPath
+  invoices: InvoiceRecord[];
+  onInvoiceSelect?: (invoice: InvoiceRecord) => void;
+  selectedInvoiceId?: string;
+  onRefresh?: () => void;
 }
 
-interface InvoiceRecord extends EntityRecord {
-  InvoiceID?: string
-  ContractNumber?: string
-  VendorName?: string
-  VendorCAGE?: string
-  VendorUEI?: string
-  InvoiceDate?: string
-  ShipmentNumber?: string
-  AcceptanceDate?: string
-  PaymentDueDate?: string
-  InvoiceTotal?: number
-  Status?: string
-  Remarks?: string
-  InvoiceDoc?: string
-}
+export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRefresh }: InvoiceGridProps) => {
+  const [sortField, setSortField] = useState<SortField>('updateTime');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [filterStatus, setFilterStatus] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
-const ENTITY_UUID = '9f8f532a-a6ae-f011-8e61-002248862cce'
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
-const InvoiceGrid = ({ sdk }: InvoiceGridProps) => {
-  const [invoices, setInvoices] = useState<InvoiceRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const uniqueStatuses = useMemo(() => {
+    const statuses = new Set<string>();
+    invoices.forEach(inv => {
+      if (inv.status) statuses.add(inv.status);
+    });
+    return Array.from(statuses).sort();
+  }, [invoices]);
 
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        setLoading(true)
-        setError(null)
+  const filteredAndSortedInvoices = useMemo(() => {
+    let filtered = invoices;
 
-        // Fetch records using the provided function
-        const records = await sdk.entities.getRecordsById(ENTITY_UUID, {
-          pageSize: 100,
-          expansionLevel: 1
-        })
-
-        setInvoices(records.items as InvoiceRecord[])
-      } catch (err) {
-        console.error('Error fetching invoices:', err)
-        setError(err instanceof Error ? err.message : 'Failed to fetch invoices')
-      } finally {
-        setLoading(false)
-      }
+    // Filter by status
+    if (filterStatus !== 'All') {
+      filtered = filtered.filter(inv => inv.status === filterStatus);
     }
 
-    fetchInvoices()
-  }, [sdk])
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(inv =>
+        (inv.invoiceId?.toLowerCase().includes(query)) ||
+        (inv.vendorName?.toLowerCase().includes(query)) ||
+        (inv.contractNumber?.toLowerCase().includes(query)) ||
+        (inv.shipmentNumber?.toLowerCase().includes(query))
+      );
+    }
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString()
-  }
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      let aVal: any = a[sortField];
+      let bVal: any = b[sortField];
 
-  const formatCurrency = (amount?: number) => {
-    if (amount === null || amount === undefined) return '-'
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
-  }
+      if (sortField === 'invoiceTotal') {
+        aVal = a.invoiceTotal || 0;
+        bVal = b.invoiceTotal || 0;
+      } else if (sortField === 'acceptanceDate' || sortField === 'updateTime') {
+        aVal = a[sortField] ? new Date(a[sortField]!).getTime() : 0;
+        bVal = b[sortField] ? new Date(b[sortField]!).getTime() : 0;
+      } else {
+        aVal = aVal?.toString().toLowerCase() || '';
+        bVal = bVal?.toString().toLowerCase() || '';
+      }
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading invoices...</p>
-      </div>
-    )
-  }
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
 
-  if (error) {
-    return (
-      <div className="error-container">
-        <h2>Error</h2>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Retry</button>
-      </div>
-    )
-  }
+    return sorted;
+  }, [invoices, filterStatus, searchQuery, sortField, sortDirection]);
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return sortDirection === 'asc' ? (
+      <svg className="w-4 h-4 text-uipath-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg className="w-4 h-4 text-uipath-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+  };
 
   return (
-    <div className="invoice-grid-container">
-      <div className="grid-header">
-        <h2>Invoices ({invoices.length})</h2>
+    <div className="space-y-4">
+      {/* Instructions Banner */}
+  
+
+      {/* Filters and Search */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1 relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Search by invoice ID, vendor name, contract, or shipment number..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-uipath-orange focus:border-transparent"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              aria-label="Clear search"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-uipath-orange focus:border-transparent"
+          >
+            <option value="All">All Statuses</option>
+            {uniqueStatuses.map(status => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="px-4 py-2 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              aria-label="Refresh data"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
-      <div className="table-wrapper">
-        <table className="invoice-table">
-          <thead>
-            <tr>
-              <th>Invoice ID</th>
-              <th>Contract Number</th>
-              <th>Vendor Name</th>
-              <th>Vendor CAGE</th>
-              <th>Vendor UEI</th>
-              <th>Invoice Date</th>
-              <th>Shipment Number</th>
-              <th>Acceptance Date</th>
-              <th>Payment Due Date</th>
-              <th>Invoice Total</th>
-              <th>Status</th>
-              <th>Remarks</th>
-              <th>Invoice Doc</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.length === 0 ? (
+
+      {/* Results count */}
+      <div className="text-sm text-gray-600">
+        Showing {filteredAndSortedInvoices.length} of {invoices.length} invoices
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <td colSpan={13} className="no-data">
-                  No invoices found
-                </td>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('invoiceId')}
+                  aria-sort={sortField === 'invoiceId' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  <div className="flex items-center gap-1">
+                    Invoice ID
+                    <SortIcon field="invoiceId" />
+                  </div>
+                </th>
+                  <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('status')}
+                  aria-sort={sortField === 'status' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  <div className="flex items-center gap-1">
+                    Status
+                    <SortIcon field="status" />
+                  </div>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contract Number
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('vendorName')}
+                  aria-sort={sortField === 'vendorName' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  <div className="flex items-center gap-1">
+                    Vendor Name
+                    <SortIcon field="vendorName" />
+                  </div>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Shipment Number
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('acceptanceDate')}
+                  aria-sort={sortField === 'acceptanceDate' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  <div className="flex items-center gap-1">
+                    Acceptance Date
+                    <SortIcon field="acceptanceDate" />
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('invoiceTotal')}
+                  aria-sort={sortField === 'invoiceTotal' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  <div className="flex items-center gap-1">
+                    Invoice Total
+                    <SortIcon field="invoiceTotal" />
+                  </div>
+                </th>
+              
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('updateTime')}
+                  aria-sort={sortField === 'updateTime' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  <div className="flex items-center gap-1">
+                    Last Updated
+                    <SortIcon field="updateTime" />
+                  </div>
+                </th>
               </tr>
-            ) : (
-              invoices.map((invoice) => (
-                <tr key={invoice.id}>
-                  <td>{invoice.InvoiceID || '-'}</td>
-                  <td>{invoice.ContractNumber || '-'}</td>
-                  <td>{invoice.VendorName || '-'}</td>
-                  <td>{invoice.VendorCAGE || '-'}</td>
-                  <td>{invoice.VendorUEI || '-'}</td>
-                  <td>{formatDate(invoice.InvoiceDate)}</td>
-                  <td>{invoice.ShipmentNumber || '-'}</td>
-                  <td>{formatDate(invoice.AcceptanceDate)}</td>
-                  <td>{formatDate(invoice.PaymentDueDate)}</td>
-                  <td className="currency">{formatCurrency(invoice.InvoiceTotal)}</td>
-                  <td><span className={`status-badge status-${invoice.Status?.toLowerCase()}`}>{invoice.Status || '-'}</span></td>
-                  <td className="remarks-cell">{invoice.Remarks || '-'}</td>
-                  <td>{invoice.InvoiceDoc ? '📎' : '-'}</td>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredAndSortedInvoices.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-uipath-orange-subtle mb-4">
+                      <svg className="h-8 w-8 text-uipath-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No invoices match your criteria</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {searchQuery || filterStatus !== 'All'
+                        ? 'Try adjusting your search or filter to see more results.'
+                        : 'No invoices have been processed yet.'}
+                    </p>
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredAndSortedInvoices.map((invoice) => (
+                  <tr
+                    key={invoice.id}
+                    onClick={() => onInvoiceSelect?.(invoice)}
+                    className={`transition-colors cursor-pointer ${
+                      selectedInvoiceId === invoice.id
+                        ? 'bg-orange-50 border-l-4 border-l-uipath-orange'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {invoice.invoiceId || '-'}
+                    </td>
+                       <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusColor(invoice.status)}`}>
+                        {invoice.status || '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {invoice.contractNumber || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {invoice.vendorName || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {invoice.shipmentNumber || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(invoice.acceptanceDate)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                      {formatCurrency(invoice.invoiceTotal)}
+                    </td>
+                 
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(invoice.updateTime)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  )
-}
-
-export default InvoiceGrid
+  );
+};
