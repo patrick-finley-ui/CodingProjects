@@ -23,6 +23,12 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
   const [processDetails, setProcessDetails] = useState<{
     executionHistory?: ProcessInstanceExecutionHistoryResponse[];
     variables?: Record<string, Array<{ name: string; value: string; type: string }>>;
+    scriptResponse?: {
+      clinsData: any[];
+      keyDetails: Record<string, any>;
+      matchEvaluations: any[];
+      summaryData: Record<string, any>;
+    };
     bpmnXml?: string;
     taskLink?: string;
     activityType?: string;
@@ -76,8 +82,23 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
 
       // Group variables by source
       const groupedVariables: Record<string, Array<{ name: string; value: string; type: string }>> = {};
-      if (variables && Array.isArray(variables)) {
-        variables.forEach((variable: any) => {
+      let scriptResponse: any = undefined;
+
+      // Check if variables has a globalVariables array
+      const variablesArray = (variables as any)?.globalVariables || variables;
+
+      if (variablesArray && Array.isArray(variablesArray)) {
+        variablesArray.forEach((variable: any) => {
+          // Extract scriptResponse variable with id 'vDuNTvAij'
+          if (variable.id === 'vDuNTvAij' && variable.name === 'scriptResponse') {
+            try {
+              scriptResponse = variable.value;
+              console.log('Found scriptResponse variable:', scriptResponse);
+            } catch (e) {
+              console.error('Error parsing scriptResponse:', e);
+            }
+          }
+
           const source = variable.source || 'Unknown';
           if (!groupedVariables[source]) {
             groupedVariables[source] = [];
@@ -112,6 +133,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       setProcessDetails({
         executionHistory: executionHistory as ProcessInstanceExecutionHistoryResponse[],
         variables: groupedVariables,
+        scriptResponse,
         bpmnXml: bpmnXml as string,
         taskLink,
         activityType,
@@ -225,7 +247,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       totalInvoices: invoices.length,
       totalInvoiceValue,
       pendingReview: invoicesByStatus['Pending Review'] || 0,
-      approved: invoicesByStatus['Approved'] || 0,
+      approved: invoicesByStatus['Accepted'] || 0,
       rejected: invoicesByStatus['Rejected'] || 0,
       paid: invoicesByStatus['Paid'] || 0,
       averageInvoiceValue: invoices.length > 0 ? totalInvoiceValue / invoices.length : 0,
@@ -277,12 +299,28 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       ),
       color: 'bg-uipath-orange',
       textColor: 'text-uipath-orange',
-      bgColor: 'bg-uipath-orange-subtle',
+      bgColor: 'bg-white',
       description: 'All invoices in the system',
     },
     {
       title: 'Total Invoice Value',
-      value: formatCurrency(metrics.totalInvoiceValue),
+      value: '$18.5B',
+      customContent: (
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-sm font-medium text-gray-700">Total Invoice Value</p>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Navy
+            </span>
+          </div>
+          <p className="text-3xl font-bold text-gray-900 mb-1">$18.5B</p>
+          <p className="text-sm font-semibold text-gray-700 mb-1">Prevented in unsupported transactions</p>
+          <p className="text-xs text-gray-500 italic">Navy 25'</p>
+        </div>
+      ),
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -290,7 +328,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       ),
       color: 'bg-gray-700',
       textColor: 'text-gray-700',
-      bgColor: 'bg-gray-50',
+      bgColor: 'bg-white',
       description: 'Sum of all invoice amounts',
     },
     {
@@ -303,7 +341,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       ),
       color: 'bg-yellow-500',
       textColor: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
+      bgColor: 'bg-white',
       description: 'Invoices awaiting review',
     },
     {
@@ -316,7 +354,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       ),
       color: 'bg-green-500',
       textColor: 'text-green-600',
-      bgColor: 'bg-green-50',
+      bgColor: 'bg-white',
       description: 'Approved invoices',
     },
     {
@@ -329,21 +367,41 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       ),
       color: 'bg-green-500',
       textColor: 'text-green-600',
-      bgColor: 'bg-green-50',
+      bgColor: 'bg-white',
       description: 'Invoices that have been paid',
     },
     {
-      title: 'Avg. Invoice Value',
-      value: formatCurrency(metrics.averageInvoiceValue),
+      title: 'Average Invoice-to-Pay Time',
+      value: '4 days',
+      customContent: (
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-1">Average Invoice-to-Pay Time</p>
+          <div className="flex items-end gap-3 mb-2">
+            <p className="text-3xl font-bold text-green-600">4 days</p>
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-lg text-gray-400 line-through">18 days</span>
+              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+          </div>
+          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            78% faster
+          </div>
+        </div>
+      ),
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
       color: 'bg-gray-700',
       textColor: 'text-gray-700',
-      bgColor: 'bg-gray-50',
-      description: 'Average invoice amount',
+      bgColor: 'bg-white',
+      description: 'Time from invoice receipt to payment',
     },
   ];
 
@@ -356,7 +414,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
 
       <div className="space-y-6 p-6">
         {/* Debug Box */}
-        {showDebugBox && <DebugBox />}
+        {false && <DebugBox />}
 
         {/* Subtitle */}
         <div>
@@ -372,9 +430,15 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className={`text-sm font-medium ${card.textColor} mb-1`}>{card.title}</p>
-                <p className="text-3xl font-bold text-gray-900 mb-2">{card.value}</p>
-                <p className="text-xs text-gray-500">{card.description}</p>
+                {(card as any).customContent ? (
+                  (card as any).customContent
+                ) : (
+                  <>
+                    <p className={`text-sm font-medium ${card.textColor} mb-1`}>{card.title}</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-2">{card.value}</p>
+                    <p className="text-xs text-gray-500">{card.description}</p>
+                  </>
+                )}
               </div>
               <div className={card.textColor}>{card.icon}</div>
             </div>
@@ -383,7 +447,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       </div>
 
       {/* Info Banner */}
-      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+      {/* <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
         <div className="flex">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -421,12 +485,12 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
             )}
           </div>
         </div>
-      </div>
+      </div> */}
 
-      {/* Two-Column Layout: Invoice Grid + Details */}
+      {/* Invoice Management Section */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-gray-900">Invoice Management</h3>
+          <h3 className="text-xl font-semibold text-gray-900">Invoice Processing</h3>
           <button
             onClick={() => setIsStartProcessModalOpen(true)}
             className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
@@ -437,32 +501,44 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
             Start Invoice Processing
           </button>
         </div>
-        <div className="flex gap-4 h-[calc(100vh-700px)] min-h-[500px]">
-          {/* Left Side - Invoice Grid (dynamic width based on selection) */}
-          <div className={`${selectedInvoice ? 'w-[40%]' : 'w-full'} overflow-y-auto transition-all duration-300`}>
+
+        {/* Toggle between Grid and Detail View */}
+        {!selectedInvoice ? (
+          /* Grid View - Full Width */
+          <div className="overflow-y-auto">
             <InvoiceGrid
               invoices={invoices}
               onInvoiceSelect={handleInvoiceSelect}
-              selectedInvoiceId={selectedInvoice?.id}
+              selectedInvoiceId={undefined}
               onRefresh={fetchInvoices}
             />
           </div>
-
-          {/* Right Side - Invoice Details (60% width, only shown when invoice is selected) */}
-          {selectedInvoice && (
-            <div className="w-[60%] overflow-y-auto bg-white rounded-lg border border-gray-200 shadow-sm">
-              <InvoiceDetails
-                selectedInvoice={selectedInvoice}
-                processDetails={processDetails}
-                onRefreshData={() => {
-                  if (selectedInvoice) {
-                    fetchProcessDetails(selectedInvoice);
-                  }
-                }}
-              />
+        ) : (
+          /* Detail View - Full Width with Breadcrumb */
+          <div className="overflow-y-auto bg-white rounded-lg border border-gray-200 shadow-sm">
+            {/* Breadcrumb */}
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+              <button
+                onClick={() => setSelectedInvoice(null)}
+                className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-orange-600 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Invoice Grid
+              </button>
             </div>
-          )}
-        </div>
+            <InvoiceDetails
+              selectedInvoice={selectedInvoice}
+              processDetails={processDetails}
+              onRefreshData={() => {
+                if (selectedInvoice) {
+                  fetchProcessDetails(selectedInvoice);
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Start Process Modal */}

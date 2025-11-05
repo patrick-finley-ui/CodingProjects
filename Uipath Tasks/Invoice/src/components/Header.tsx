@@ -1,5 +1,6 @@
 import uipathLogo from '../assets/uipath-logo-png_seeklogo-618304.png';
 import dodLogo from '../assets/dod-logo.png';
+import { resolveAssetUrl } from '../utils/assetHelpers';
 
 export const Header = () => {
   return (
@@ -9,7 +10,7 @@ export const Header = () => {
           {/* Left: DoD Logo */}
           <div className="flex items-center">
             <img
-              src={dodLogo}
+              src={resolveAssetUrl(dodLogo)}
               alt="Department of Defense"
               className="h-20 w-auto object-contain"
             />
@@ -23,7 +24,7 @@ export const Header = () => {
           {/* Right: UiPath Logo */}
           <div className="flex items-center">
             <img
-              src={uipathLogo}
+              src={resolveAssetUrl(uipathLogo)}
               alt="UiPath"
               className="h-28 w-auto object-contain"
             />

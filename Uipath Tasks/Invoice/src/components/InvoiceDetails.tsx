@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import type { InvoiceRecord } from '../types/invoices';
+import type { InvoiceRecord, ScriptResponseData } from '../types/invoices';
 import type { ProcessInstanceExecutionHistoryResponse } from '@uipath/uipath-typescript';
-import { formatCurrency, formatDate, formatDateTime, getStatusColor } from '../utils/formatters';
+import { formatDateTime, getStatusColor } from '../utils/formatters';
 
 interface InvoiceDetailsProps {
   selectedInvoice: InvoiceRecord | null;
   processDetails: {
     executionHistory?: ProcessInstanceExecutionHistoryResponse[];
     variables?: Record<string, Array<{ name: string; value: string; type: string }>>;
+    scriptResponse?: ScriptResponseData;
     bpmnXml?: string;
     taskLink?: string;
     activityType?: string;
@@ -21,7 +22,49 @@ interface InvoiceDetailsProps {
 
 export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetailsProps) => {
   const [isTaskPopupOpen, setIsTaskPopupOpen] = useState(false);
+  const [isLoadingVariables, setIsLoadingVariables] = useState(false);
+  const [variablesData, setVariablesData] = useState<any>(null);
+  const [variablesError, setVariablesError] = useState<string | null>(null);
   const showDebugBox = import.meta.env.VITE_SHOW_DEBUG_BOX === 'true';
+
+  const fetchVariablesDebug = async () => {
+    if (!selectedInvoice?.maestroProcessKey || !selectedInvoice?.folderId) {
+      setVariablesError('No process key or folder ID available');
+      return;
+    }
+
+    try {
+      setIsLoadingVariables(true);
+      setVariablesError(null);
+
+      const variables = await (window as any).sdk.maestro.processes.instances.getVariables(
+        selectedInvoice.maestroProcessKey,
+        selectedInvoice.folderId
+      );
+
+      // Extract the scriptResponse variable with id 'vDuNTvAij' from globalVariables
+      const variablesArray = (variables as any)?.globalVariables || variables;
+      let scriptResponseVariable = null;
+
+      if (Array.isArray(variablesArray)) {
+        scriptResponseVariable = variablesArray.find(
+          (v: any) => v.id === 'vDuNTvAij' && v.name === 'scriptResponse'
+        );
+      }
+
+      if (scriptResponseVariable) {
+        setVariablesData(scriptResponseVariable);
+      } else {
+        setVariablesError('scriptResponse variable with id "vDuNTvAij" not found in response');
+        setVariablesData(variables); // Show full response for debugging
+      }
+    } catch (err) {
+      console.error('Error fetching variables:', err);
+      setVariablesError(err instanceof Error ? err.message : 'Failed to fetch variables');
+    } finally {
+      setIsLoadingVariables(false);
+    }
+  };
 
   // Empty state - no invoice selected
   if (!selectedInvoice) {
@@ -66,10 +109,11 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
           </div>
         </div>
 
+        {/* Main Content */}
         <div className="p-4 space-y-4">
           {/* Debug Box - Maestro Data */}
-          {showDebugBox && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+          {false && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded space-y-3">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +122,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                 </div>
                 <div className="ml-3 flex-1">
                   <h3 className="text-sm font-medium text-yellow-800 mb-2">Debug: Maestro Process Data</h3>
-                  <div className="text-xs font-mono space-y-1">
+                  <div className="text-xs font-mono space-y-1 mb-3">
                     <div className="flex gap-2">
                       <span className="text-yellow-700 font-semibold">Process Key:</span>
                       <span className="text-yellow-900">{selectedInvoice.maestroProcessKey || 'Not set'}</span>
@@ -88,84 +132,261 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                       <span className="text-yellow-900">{selectedInvoice.folderId || 'Not set'}</span>
                     </div>
                   </div>
+
+                  <button
+                    onClick={fetchVariablesDebug}
+                    disabled={isLoadingVariables || !selectedInvoice.maestroProcessKey || !selectedInvoice.folderId}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-xs font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoadingVariables ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Fetch Variables Data
+                      </>
+                    )}
+                  </button>
+
+                  {variablesError && (
+                    <div className="mt-3 bg-red-100 border border-red-300 rounded p-2">
+                      <p className="text-xs text-red-800 font-semibold">Error:</p>
+                      <p className="text-xs text-red-700">{variablesError}</p>
+                    </div>
+                  )}
+
+                  {variablesData && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-xs text-yellow-800 font-semibold">scriptResponse Variable (id: vDuNTvAij)</p>
+                          {variablesData.id && (
+                            <p className="text-xs text-yellow-600 mt-1">
+                              ID: {variablesData.id} | Name: {variablesData.name} | Type: {variablesData.type}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setVariablesData(null)}
+                          className="text-yellow-600 hover:text-yellow-800 text-xs font-medium"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                      <div className="bg-yellow-100 border border-yellow-300 rounded p-3 max-h-96 overflow-auto">
+                        <pre className="text-xs text-yellow-900 whitespace-pre-wrap break-words">
+                          {JSON.stringify(variablesData.value || variablesData, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Invoice Key Metrics Cards */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-semibold text-gray-700">Invoice Total</h3>
+          {/* Three Column Layout - Match Summary, Key Details, Tasks */}
+          {processDetails.scriptResponse && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Column 1: Match Summary */}
+              <div>
+                {processDetails.scriptResponse?.summaryData && (
+                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900">Match Summary</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {processDetails.scriptResponse.summaryData.OverallStatus && (
+                        <div className="bg-white rounded-lg p-3 border border-orange-200">
+                          <p className="text-xs font-medium text-gray-500 mb-1">Overall Status</p>
+                          <p className={`text-sm font-bold ${
+                            processDetails.scriptResponse.summaryData.OverallStatus === 'FullyMatched' ? 'text-green-600' :
+                            processDetails.scriptResponse.summaryData.OverallStatus === 'PartiallyMatched' ? 'text-yellow-600' :
+                            'text-red-600'
+                          }`}>
+                            {processDetails.scriptResponse.summaryData.OverallStatus}
+                          </p>
+                        </div>
+                      )}
+                      {processDetails.scriptResponse.summaryData.ChecksPerformed && (
+                        <div className="bg-white rounded-lg p-3 border border-orange-200">
+                          <p className="text-xs font-medium text-gray-500 mb-1">Checks Performed</p>
+                          <p className="text-sm font-bold text-gray-900">{processDetails.scriptResponse.summaryData.ChecksPerformed}</p>
+                        </div>
+                      )}
+                      {processDetails.scriptResponse.summaryData.ChecksPassed && (
+                        <div className="bg-white rounded-lg p-3 border border-orange-200">
+                          <p className="text-xs font-medium text-gray-500 mb-1">Checks Passed</p>
+                          <p className="text-sm font-bold text-green-600">{processDetails.scriptResponse.summaryData.ChecksPassed}</p>
+                        </div>
+                      )}
+                      {processDetails.scriptResponse.summaryData.ChecksFailed && (
+                        <div className="bg-white rounded-lg p-3 border border-orange-200">
+                          <p className="text-xs font-medium text-gray-500 mb-1">Checks Failed</p>
+                          <p className="text-sm font-bold text-red-600">{processDetails.scriptResponse.summaryData.ChecksFailed}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className="text-gray-900 font-bold text-lg">{formatCurrency(selectedInvoice.invoiceTotal)}</p>
-            </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-semibold text-gray-700">Acceptance Date</h3>
+              {/* Column 2: Key Details */}
+              <div>
+                {processDetails.scriptResponse?.keyDetails && (
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                      </svg>
+                      Key Details
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedInvoice.status && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500">Invoice Status</p>
+                          <span className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedInvoice.status)}`}>
+                            {selectedInvoice.status}
+                          </span>
+                        </div>
+                      )}
+                      {processDetails.scriptResponse.keyDetails.contract_number_invoice && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500">Contract Number (Invoice)</p>
+                          <p className="text-sm font-medium text-gray-900 font-mono mt-1">
+                            {processDetails.scriptResponse.keyDetails.contract_number_invoice}
+                          </p>
+                        </div>
+                      )}
+                      {processDetails.scriptResponse.keyDetails.invoice_number_invoice && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500">Invoice Number</p>
+                          <p className="text-sm font-medium text-gray-900 font-mono mt-1">
+                            {processDetails.scriptResponse.keyDetails.invoice_number_invoice}
+                          </p>
+                        </div>
+                      )}
+                      {processDetails.scriptResponse.keyDetails.contract_number_purchase_order && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500">Contract Number (PO)</p>
+                          <p className="text-sm font-medium text-gray-900 font-mono mt-1">
+                            {processDetails.scriptResponse.keyDetails.contract_number_purchase_order}
+                          </p>
+                        </div>
+                      )}
+                      {processDetails.scriptResponse.keyDetails.contract_number_goods_receipt && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500">Contract Number (GR)</p>
+                          <p className="text-sm font-medium text-gray-900 font-mono mt-1">
+                            {processDetails.scriptResponse.keyDetails.contract_number_goods_receipt}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className="text-gray-900 font-medium">{formatDate(selectedInvoice.acceptanceDate)}</p>
-            </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-semibold text-gray-700">Contract Number</h3>
+              {/* Column 3: Tasks */}
+              <div>
+                {hasProcessInstance && !processDetails.loading && !processDetails.error && (
+                  <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100 p-4">
+                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-3">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                          </svg>
+                        </div>
+                        Tasks
+                      </h3>
+                      <p className="text-green-700 text-xs mt-1">Active tasks</p>
+                    </div>
+                    <div className="p-4">
+                      {processDetails.activityType?.toLowerCase() === 'user task' ? (
+                        processDetails.taskCompleted ? (
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900 text-sm">Task Completed</h4>
+                              <p className="text-gray-600 text-xs">{processDetails.activityName || 'Task completed'}</p>
+                            </div>
+                          </div>
+                        ) : processDetails.taskLink ? (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                              <div className="p-2 bg-green-100 rounded-lg">
+                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-green-900 text-sm">{processDetails.activityName || 'Active Task'}</h4>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => setIsTaskPopupOpen(true)}
+                              className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              Open Task
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div className="p-2 bg-yellow-100 rounded-lg">
+                              <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-yellow-900 text-sm">Task Link Unavailable</h4>
+                              <p className="text-yellow-700 text-xs">No link available</p>
+                            </div>
+                          </div>
+                        )
+                      ) : (
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="p-2 bg-gray-100 rounded-lg">
+                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900 text-sm">Automated Process</h4>
+                            <p className="text-gray-600 text-xs">No human tasks required</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className="text-gray-900 font-medium">{selectedInvoice.contractNumber || '-'}</p>
             </div>
-          </div>
-
-          {/* Invoice Details Section */}
-          <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Additional Information
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Shipment Number</p>
-                <p className="text-gray-900 font-medium mt-1">{selectedInvoice.shipmentNumber || '-'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Record Owner</p>
-                <p className="text-gray-900 font-medium mt-1">{selectedInvoice.recordOwner || '-'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Created By</p>
-                <p className="text-gray-900 font-medium mt-1">{selectedInvoice.createdBy || '-'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Last Updated</p>
-                <p className="text-gray-900 font-medium mt-1">{formatDate(selectedInvoice.updateTime)}</p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Process Details Section - Only if process instance exists */}
+        {/* Process Details Sections Below - Full Width */}
         {hasProcessInstance && (
-          <>
+          <div className="px-4 space-y-4">
             {processDetails.loading ? (
-              <div className="px-4 pb-4">
+              <div>
                 <div className="flex items-center justify-center py-8">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-200 border-t-orange-600 mx-auto mb-4"></div>
@@ -175,7 +396,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                 </div>
               </div>
             ) : processDetails.error ? (
-              <div className="px-4 pb-4">
+              <div>
                 <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-6">
                   <div className="flex items-start">
                     <div className="p-2 bg-red-100 rounded-lg">
@@ -192,138 +413,112 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
               </div>
             ) : (
               <>
-                {/* Tasks Section */}
-                <div className="px-4 pb-4">
-                  <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100 p-4">
-                      <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                          </svg>
-                        </div>
-                        Tasks
-                      </h3>
-                      <p className="text-green-700 mt-1">Active tasks and human interaction points</p>
-                    </div>
-
-                    <div className="p-4">
-                      {processDetails.activityType?.toLowerCase() === 'user task' ? (
-                        processDetails.taskCompleted ? (
-                          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                            <div className="p-3 bg-gray-100 rounded-lg">
-                              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">Task Completed</h4>
-                              <p className="text-gray-600 text-sm">{processDetails.activityName || 'User task has been completed'}</p>
-                            </div>
-                          </div>
-                        ) : processDetails.taskLink ? (
-                          <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-                            <div className="flex items-center gap-4">
-                              <div className="p-3 bg-green-100 rounded-lg">
-                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <h4 className="font-semibold text-green-900">{processDetails.activityName || 'Active User Task'}</h4>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => setIsTaskPopupOpen(true)}
-                              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                              Open Task
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-                            <div className="p-3 bg-yellow-100 rounded-lg">
-                              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-yellow-900">Task Link Unavailable</h4>
-                              <p className="text-yellow-700 text-sm">No action center link available for this user task</p>
-                            </div>
-                          </div>
-                        )
-                      ) : (
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                          <div className="p-3 bg-gray-100 rounded-lg">
-                            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">Automated Process</h4>
-                            <p className="text-gray-600 text-sm">No human tasks required for this invoice</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Variables Section */}
-                {processDetails.variables && Object.keys(processDetails.variables).length > 0 && (
-                  <div className="px-4 pb-4">
+                {/* CLINs Data Section */}
+                {processDetails.scriptResponse?.clinsData && processDetails.scriptResponse.clinsData.length > 0 && (
+                  <div>
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                       <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100 p-4">
                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
                           <div className="p-2 bg-purple-100 rounded-lg">
                             <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v1.586a1 1 0 00.293.707l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-5.586a1 1 0 01-.707-.293L7.707 21.707A1 1 0 017 21z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                             </svg>
                           </div>
-                          Process Variables
+                          Contract Line Items (CLINs)
                         </h3>
-                        <p className="text-purple-700 mt-1">Variables organized by source</p>
+                        <p className="text-purple-700 mt-1">Detailed line item information</p>
                       </div>
 
-                      <div className="max-h-80 overflow-y-auto">
-                        {Object.entries(processDetails.variables).map(([source, variables]) => (
-                          <div key={source} className="border-b border-gray-100 last:border-b-0">
-                            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                                {source}
-                              </h4>
-                            </div>
-                            <div className="divide-y divide-gray-100">
-                              {variables.map((variable, index) => (
-                                <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
-                                  <div className="flex items-start gap-4">
-                                    <div className="p-2 bg-purple-50 rounded-lg flex-shrink-0">
-                                      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                                      </svg>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <h5 className="text-sm font-semibold text-gray-900">{variable.name}</h5>
-                                        <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
-                                          {variable.type}
-                                        </span>
-                                      </div>
-                                      <div className="bg-gray-50 rounded-lg px-3 py-2">
-                                        <span className="text-sm font-mono text-gray-800 break-all">{variable.value}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              {processDetails.scriptResponse.clinsData.length > 0 && Object.keys(processDetails.scriptResponse.clinsData[0]).map((key) => (
+                                <th key={key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  {key.replace(/_/g, ' ')}
+                                </th>
                               ))}
-                            </div>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {processDetails.scriptResponse.clinsData.map((clin, index) => (
+                              <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                {Object.values(clin).map((value, valueIndex) => (
+                                  <td key={valueIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {value !== undefined && value !== null ? String(value) : '-'}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Match Evaluations Section */}
+                {processDetails.scriptResponse?.matchEvaluations && processDetails.scriptResponse.matchEvaluations.length > 0 && (
+                  <div>
+                    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-4">
+                        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
                           </div>
-                        ))}
+                          Match Evaluations
+                        </h3>
+                        <p className="text-blue-700 mt-1">Detailed mismatch analysis</p>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mismatch Type</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Justification</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {processDetails.scriptResponse.matchEvaluations.map((evaluation: any, index) => (
+                              <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {evaluation.MismatchType}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                    evaluation.Status === 'Passed' ? 'bg-green-100 text-green-800' :
+                                    evaluation.Status === 'Not Passed' ? 'bg-red-100 text-red-800' :
+                                    evaluation.Status === 'Flagged' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-blue-100 text-blue-800'
+                                  }`}>
+                                    {evaluation.Status}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                    evaluation.Severity === 'High' ? 'bg-red-50 text-red-700' :
+                                    evaluation.Severity === 'Medium' ? 'bg-yellow-50 text-yellow-700' :
+                                    'bg-gray-50 text-gray-700'
+                                  }`}>
+                                    {evaluation.Severity}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-700 max-w-md">
+                                  {evaluation.Reason}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-500 max-w-md">
+                                  {evaluation.Justification}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>
@@ -331,7 +526,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
 
                 {/* Execution History Section */}
                 {processDetails.executionHistory && processDetails.executionHistory.length > 0 && (
-                  <div className="px-4 pb-4">
+                  <div>
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-4">
                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
@@ -383,7 +578,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                 )}
               </>
             )}
-          </>
+          </div>
         )}
 
         {/* No Process Instance Message */}
