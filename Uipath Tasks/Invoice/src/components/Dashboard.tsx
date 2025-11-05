@@ -6,7 +6,6 @@ import { InvoiceGrid } from './InvoiceGrid';
 import { InvoiceDetails } from './InvoiceDetails';
 import { DebugBox } from './DebugBox';
 import { Header } from './Header';
-import { formatCurrency } from '../utils/formatters';
 
 interface DashboardProps {
   sdk: UiPath;
@@ -18,7 +17,6 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tipsCollapsed, setTipsCollapsed] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceRecord | null>(null);
   const [processDetails, setProcessDetails] = useState<{
     executionHistory?: ProcessInstanceExecutionHistoryResponse[];
@@ -414,7 +412,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
 
       <div className="space-y-6 p-6">
         {/* Debug Box */}
-        {false && <DebugBox />}
+        {showDebugBox && <DebugBox />}
 
         {/* Subtitle */}
         <div>

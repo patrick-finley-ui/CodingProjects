@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { InvoiceRecord, ScriptResponseData } from '../types/invoices';
 import type { ProcessInstanceExecutionHistoryResponse } from '@uipath/uipath-typescript';
 import { formatDateTime, getStatusColor } from '../utils/formatters';
+import agentIcon from '../assets/agent.svg';
 
 interface InvoiceDetailsProps {
   selectedInvoice: InvoiceRecord | null;
@@ -25,6 +26,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
   const [isLoadingVariables, setIsLoadingVariables] = useState(false);
   const [variablesData, setVariablesData] = useState<any>(null);
   const [variablesError, setVariablesError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'clins' | 'evaluations' | 'execution'>('clins');
   const showDebugBox = import.meta.env.VITE_SHOW_DEBUG_BOX === 'true';
 
   const fetchVariablesDebug = async () => {
@@ -88,31 +90,205 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
   return (
     <>
       <div className="h-full overflow-y-auto">
-        {/* Invoice Header Section */}
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-100 p-4">
-          <div className="flex items-start justify-between">
+        {/* Invoice Header Section - Enhanced with 3 Tiers */}
+        <div className="bg-white border-b border-orange-100 p-6">
+          {/* Tier 1: Most Important - Invoice #, Status, Vendor */}
+          <div className="flex items-start gap-8 mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                Invoice Details
-              </h2>
-              <p className="text-orange-700 mt-2 font-semibold">{selectedInvoice.vendorName || 'Unknown Vendor'}</p>
-              <p className="text-orange-600 text-sm mt-1 font-mono">Invoice ID: {selectedInvoice.invoiceId || selectedInvoice.id}</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Invoice: {selectedInvoice.invoiceId || selectedInvoice.id}
+              </h1>
+              <p className="text-xl font-semibold text-orange-700 mb-1">
+                Vendor: {selectedInvoice.vendorName || 'Unknown Vendor'}
+              </p>
             </div>
-            <span className={`px-4 py-2 text-sm font-semibold rounded-full shadow-sm border ${getStatusColor(selectedInvoice.status)}`}>
-              {selectedInvoice.status || 'Unknown'}
-            </span>
+            <div className="flex gap-3">
+              <span className={`px-5 py-2.5 text-base font-bold rounded-full shadow-sm border whitespace-nowrap ${getStatusColor(selectedInvoice.status)}`}>
+                Status: {selectedInvoice.status || 'Unknown'}
+              </span>
+              {processDetails.activityType?.toLowerCase() === 'user task' && !processDetails.taskCompleted && processDetails.taskLink ? (
+                <button
+                  onClick={() => setIsTaskPopupOpen(true)}
+                  className={`px-5 py-2.5 text-base font-bold rounded-full shadow-sm border whitespace-nowrap transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-105 bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 flex items-center gap-2`}
+                >
+                  Audit Review: Active
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </button>
+              ) : (
+                <span className={`px-5 py-2.5 text-base font-bold rounded-full shadow-sm border whitespace-nowrap flex items-center gap-2 ${
+                  processDetails.scriptResponse?.summaryData?.OverallStatus === 'FullyMatched' ? 'bg-green-100 text-green-800 border-green-200' :
+                  processDetails.activityType?.toLowerCase() === 'user task' && !processDetails.taskCompleted ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                  processDetails.scriptResponse ? 'bg-green-100 text-green-800 border-green-200' :
+                  'bg-gray-100 text-gray-600 border-gray-200'
+                }`}>
+                  Audit Review: {
+                    processDetails.scriptResponse?.summaryData?.OverallStatus === 'FullyMatched' ? 'Completed' :
+                    processDetails.activityType?.toLowerCase() === 'user task' && !processDetails.taskCompleted ? 'Active' :
+                    processDetails.scriptResponse ? 'Completed' :
+                    'Not Ready Yet'
+                  }
+                  {processDetails.scriptResponse?.summaryData?.OverallStatus === 'FullyMatched' || processDetails.scriptResponse ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : processDetails.activityType?.toLowerCase() === 'user task' && !processDetails.taskCompleted ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </span>
+              )}
+            </div>
           </div>
+          <div className="w-full h-1 bg-orange-400 my-6 rounded"></div>
+
+          {/* Tier 2 & 3: Side-by-side cards - Key Details and AI Agent Match Summary */}
+          {processDetails.scriptResponse && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Key Details Card */}
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                  Key Details
+                </h3>
+                <div className="space-y-2.5 text-sm">
+                  {/* Contract Number */}
+                  {processDetails.scriptResponse.keyDetails?.contract_number_invoice && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Contract Number:</span>
+                      <span className="font-medium text-gray-900 font-mono">
+                        {processDetails.scriptResponse.keyDetails.contract_number_invoice}
+                      </span>
+                    </div>
+                  )}
+                  {/* Invoice Date */}
+                  {selectedInvoice.createdBy && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Invoice Date:</span>
+                      <span className="font-medium text-gray-900">
+                        {new Date(selectedInvoice.createdBy).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  )}
+                  {/* Number of CLINs */}
+                  {processDetails.scriptResponse.clinsData && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Number of CLINs:</span>
+                      <span className="font-medium text-gray-900">
+                        {processDetails.scriptResponse.clinsData.length}
+                      </span>
+                    </div>
+                  )}
+                  {/* Shipment */}
+                  {processDetails.scriptResponse.keyDetails?.shipment && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Shipment:</span>
+                      <span className="font-medium text-gray-900">
+                        {processDetails.scriptResponse.keyDetails.shipment}
+                      </span>
+                    </div>
+                  )}
+                  {/* Total Amount */}
+                  {processDetails.scriptResponse.keyDetails?.total_amount && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Total Amount:</span>
+                      <span className="font-medium text-gray-900">
+                        ${Number(processDetails.scriptResponse.keyDetails.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* AI Agent Match Summary Card */}
+              {processDetails.scriptResponse.summaryData && (
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-200">
+                    <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <img
+                        src={agentIcon}
+                        alt="Agent"
+                        className="w-5 h-5 inline-block align-middle"
+                      />
+                      AI Agent Match Summary
+                    </h3>
+                  <div className="space-y-3 text-sm">
+                    {/* Overall Status */}
+                    {processDetails.scriptResponse.summaryData.OverallStatus && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">Status:</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          processDetails.scriptResponse.summaryData.OverallStatus === 'FullyMatched' ? 'bg-green-100 text-green-800' :
+                          processDetails.scriptResponse.summaryData.OverallStatus === 'PartiallyMatched' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {processDetails.scriptResponse.summaryData.OverallStatus}
+                        </span>
+                      </div>
+                    )}
+                    {/* Recommendations */}
+                    {processDetails.scriptResponse.summaryData.Recommendations && (
+                      <div>
+                        <span className="text-gray-500 block mb-1">Recommendations:</span>
+                        <p className="text-gray-900 text-xs leading-relaxed bg-gray-50 p-2 rounded">
+                          {processDetails.scriptResponse.summaryData.Recommendations}
+                        </p>
+                      </div>
+                    )}
+                    {/* Check Breakdown */}
+                    <div>
+                      <span className="text-gray-500 block mb-1">Checks:</span>
+                      <div className="text-xs bg-gray-50 p-2 rounded space-y-1">
+                        <div>
+                          <span className="text-green-600 font-semibold">
+                            {processDetails.scriptResponse.summaryData.ChecksPassed || 0} passed
+                          </span>
+                          {' / '}
+                          <span className="text-red-600 font-semibold">
+                            {processDetails.scriptResponse.summaryData.ChecksFailed || 0} failed
+                          </span>
+                        </div>
+                        {(processDetails.scriptResponse.summaryData.FailedLow ||
+                          processDetails.scriptResponse.summaryData.FailedMedium ||
+                          processDetails.scriptResponse.summaryData.FailedHigh) && (
+                          <div className="text-gray-700">
+                            {processDetails.scriptResponse.summaryData.FailedLow > 0 && (
+                              <span className="text-yellow-600 mr-2">
+                                {processDetails.scriptResponse.summaryData.FailedLow} low
+                              </span>
+                            )}
+                            {processDetails.scriptResponse.summaryData.FailedMedium > 0 && (
+                              <span className="text-orange-600 mr-2">
+                                {processDetails.scriptResponse.summaryData.FailedMedium} medium
+                              </span>
+                            )}
+                            {processDetails.scriptResponse.summaryData.FailedHigh > 0 && (
+                              <span className="text-red-600">
+                                {processDetails.scriptResponse.summaryData.FailedHigh} high
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Main Content */}
         <div className="p-4 space-y-4">
           {/* Debug Box - Maestro Data */}
-          {false && (
+          {showDebugBox && (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded space-y-3">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
@@ -190,196 +366,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
             </div>
           )}
 
-          {/* Three Column Layout - Match Summary, Key Details, Tasks */}
-          {processDetails.scriptResponse && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Column 1: Match Summary */}
-              <div>
-                {processDetails.scriptResponse?.summaryData && (
-                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-orange-100 rounded-lg">
-                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900">Match Summary</h3>
-                    </div>
-                    <div className="space-y-3">
-                      {processDetails.scriptResponse.summaryData.OverallStatus && (
-                        <div className="bg-white rounded-lg p-3 border border-orange-200">
-                          <p className="text-xs font-medium text-gray-500 mb-1">Overall Status</p>
-                          <p className={`text-sm font-bold ${
-                            processDetails.scriptResponse.summaryData.OverallStatus === 'FullyMatched' ? 'text-green-600' :
-                            processDetails.scriptResponse.summaryData.OverallStatus === 'PartiallyMatched' ? 'text-yellow-600' :
-                            'text-red-600'
-                          }`}>
-                            {processDetails.scriptResponse.summaryData.OverallStatus}
-                          </p>
-                        </div>
-                      )}
-                      {processDetails.scriptResponse.summaryData.ChecksPerformed && (
-                        <div className="bg-white rounded-lg p-3 border border-orange-200">
-                          <p className="text-xs font-medium text-gray-500 mb-1">Checks Performed</p>
-                          <p className="text-sm font-bold text-gray-900">{processDetails.scriptResponse.summaryData.ChecksPerformed}</p>
-                        </div>
-                      )}
-                      {processDetails.scriptResponse.summaryData.ChecksPassed && (
-                        <div className="bg-white rounded-lg p-3 border border-orange-200">
-                          <p className="text-xs font-medium text-gray-500 mb-1">Checks Passed</p>
-                          <p className="text-sm font-bold text-green-600">{processDetails.scriptResponse.summaryData.ChecksPassed}</p>
-                        </div>
-                      )}
-                      {processDetails.scriptResponse.summaryData.ChecksFailed && (
-                        <div className="bg-white rounded-lg p-3 border border-orange-200">
-                          <p className="text-xs font-medium text-gray-500 mb-1">Checks Failed</p>
-                          <p className="text-sm font-bold text-red-600">{processDetails.scriptResponse.summaryData.ChecksFailed}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Column 2: Key Details */}
-              <div>
-                {processDetails.scriptResponse?.keyDetails && (
-                  <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                      </svg>
-                      Key Details
-                    </h3>
-                    <div className="space-y-2">
-                      {selectedInvoice.status && (
-                        <div>
-                          <p className="text-xs font-medium text-gray-500">Invoice Status</p>
-                          <span className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedInvoice.status)}`}>
-                            {selectedInvoice.status}
-                          </span>
-                        </div>
-                      )}
-                      {processDetails.scriptResponse.keyDetails.contract_number_invoice && (
-                        <div>
-                          <p className="text-xs font-medium text-gray-500">Contract Number (Invoice)</p>
-                          <p className="text-sm font-medium text-gray-900 font-mono mt-1">
-                            {processDetails.scriptResponse.keyDetails.contract_number_invoice}
-                          </p>
-                        </div>
-                      )}
-                      {processDetails.scriptResponse.keyDetails.invoice_number_invoice && (
-                        <div>
-                          <p className="text-xs font-medium text-gray-500">Invoice Number</p>
-                          <p className="text-sm font-medium text-gray-900 font-mono mt-1">
-                            {processDetails.scriptResponse.keyDetails.invoice_number_invoice}
-                          </p>
-                        </div>
-                      )}
-                      {processDetails.scriptResponse.keyDetails.contract_number_purchase_order && (
-                        <div>
-                          <p className="text-xs font-medium text-gray-500">Contract Number (PO)</p>
-                          <p className="text-sm font-medium text-gray-900 font-mono mt-1">
-                            {processDetails.scriptResponse.keyDetails.contract_number_purchase_order}
-                          </p>
-                        </div>
-                      )}
-                      {processDetails.scriptResponse.keyDetails.contract_number_goods_receipt && (
-                        <div>
-                          <p className="text-xs font-medium text-gray-500">Contract Number (GR)</p>
-                          <p className="text-sm font-medium text-gray-900 font-mono mt-1">
-                            {processDetails.scriptResponse.keyDetails.contract_number_goods_receipt}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Column 3: Tasks */}
-              <div>
-                {hasProcessInstance && !processDetails.loading && !processDetails.error && (
-                  <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100 p-4">
-                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                          </svg>
-                        </div>
-                        Tasks
-                      </h3>
-                      <p className="text-green-700 text-xs mt-1">Active tasks</p>
-                    </div>
-                    <div className="p-4">
-                      {processDetails.activityType?.toLowerCase() === 'user task' ? (
-                        processDetails.taskCompleted ? (
-                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                            <div className="p-2 bg-gray-100 rounded-lg">
-                              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900 text-sm">Task Completed</h4>
-                              <p className="text-gray-600 text-xs">{processDetails.activityName || 'Task completed'}</p>
-                            </div>
-                          </div>
-                        ) : processDetails.taskLink ? (
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                              <div className="p-2 bg-green-100 rounded-lg">
-                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-green-900 text-sm">{processDetails.activityName || 'Active Task'}</h4>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => setIsTaskPopupOpen(true)}
-                              className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                              Open Task
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <div className="p-2 bg-yellow-100 rounded-lg">
-                              <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-yellow-900 text-sm">Task Link Unavailable</h4>
-                              <p className="text-yellow-700 text-xs">No link available</p>
-                            </div>
-                          </div>
-                        )
-                      ) : (
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                          <div className="p-2 bg-gray-100 rounded-lg">
-                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900 text-sm">Automated Process</h4>
-                            <p className="text-gray-600 text-xs">No human tasks required</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+  
         </div>
 
         {/* Process Details Sections Below - Full Width */}
@@ -413,9 +400,82 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
               </div>
             ) : (
               <>
+                {/* Tab Navigation */}
+                {processDetails.scriptResponse?.clinsData && processDetails.scriptResponse.clinsData.length > 0 &&
+                 processDetails.scriptResponse?.matchEvaluations && processDetails.scriptResponse.matchEvaluations.length > 0 && (
+                  <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+                    <div className="flex gap-1 px-4 pt-4">
+                      <button
+                        onClick={() => setActiveTab('clins')}
+                        className={`px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 ${
+                          activeTab === 'clins'
+                            ? 'bg-white text-purple-700 border-t-2 border-l border-r border-purple-500 shadow-sm'
+                            : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                        role="tab"
+                        aria-selected={activeTab === 'clins'}
+                        aria-controls="clins-panel"
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                          </svg>
+                          Contract Line Items
+                          {processDetails.scriptResponse.clinsData && (
+                            <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
+                              {processDetails.scriptResponse.clinsData.length}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('evaluations')}
+                        className={`px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 ${
+                          activeTab === 'evaluations'
+                            ? 'bg-white text-blue-700 border-t-2 border-l border-r border-blue-500 shadow-sm'
+                            : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                        role="tab"
+                        aria-selected={activeTab === 'evaluations'}
+                        aria-controls="evaluations-panel"
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                          </svg>
+                          AI Match Evaluations
+                          {processDetails.scriptResponse.matchEvaluations && (
+                            <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                              {processDetails.scriptResponse.matchEvaluations.length}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('execution')}
+                        className={`px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 ${
+                          activeTab === 'execution'
+                            ? 'bg-white text-blue-700 border-t-2 border-l border-r border-blue-500 shadow-sm'
+                            : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                        role="tab"
+                        aria-selected={activeTab === 'execution'}
+                        aria-controls="execution-panel"
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          Execution History
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* CLINs Data Section */}
-                {processDetails.scriptResponse?.clinsData && processDetails.scriptResponse.clinsData.length > 0 && (
-                  <div>
+                {activeTab === 'clins' && processDetails.scriptResponse?.clinsData && processDetails.scriptResponse.clinsData.length > 0 && (
+                  <div id="clins-panel" role="tabpanel" aria-labelledby="clins-tab">
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                       <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100 p-4">
                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
@@ -458,8 +518,8 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                 )}
 
                 {/* Match Evaluations Section */}
-                {processDetails.scriptResponse?.matchEvaluations && processDetails.scriptResponse.matchEvaluations.length > 0 && (
-                  <div>
+                {activeTab === 'evaluations' && processDetails.scriptResponse?.matchEvaluations && processDetails.scriptResponse.matchEvaluations.length > 0 && (
+                  <div id="evaluations-panel" role="tabpanel" aria-labelledby="evaluations-tab">
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-4">
                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
@@ -468,9 +528,9 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
                           </div>
-                          Match Evaluations
+                          AI Match Evaluations
                         </h3>
-                        <p className="text-blue-700 mt-1">Detailed mismatch analysis</p>
+                        <p className="text-blue-700 mt-1">Detailed AI mismatch analysis</p>
                       </div>
 
                       <div className="overflow-x-auto">
@@ -525,7 +585,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                 )}
 
                 {/* Execution History Section */}
-                {processDetails.executionHistory && processDetails.executionHistory.length > 0 && (
+                {activeTab === 'execution' && processDetails.executionHistory && processDetails.executionHistory.length > 0 && (
                   <div>
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-4">
