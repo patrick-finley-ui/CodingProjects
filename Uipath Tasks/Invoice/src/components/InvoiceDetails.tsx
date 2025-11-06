@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { InvoiceRecord, ScriptResponseData } from '../types/invoices';
 import type { ProcessInstanceExecutionHistoryResponse } from '@uipath/uipath-typescript';
 import { formatDateTime, getStatusColor } from '../utils/formatters';
-import agentIcon from '../assets/agent.svg';
 
 interface InvoiceDetailsProps {
   selectedInvoice: InvoiceRecord | null;
@@ -28,6 +27,19 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
   const [variablesError, setVariablesError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'clins' | 'evaluations' | 'execution'>('clins');
   const showDebugBox = import.meta.env.VITE_SHOW_DEBUG_BOX === 'true';
+
+  // Hardcoded process definition key - same as in Dashboard.tsx
+  const PROCESS_DEFINITION_KEY = '44479d67-c3d0-41e4-9ae0-3b337e320f9e';
+
+  const openMaestroProcess = () => {
+    if (!selectedInvoice?.maestroProcessKey || !selectedInvoice?.folderId) {
+      console.error('Missing maestroProcessKey or folderId');
+      return;
+    }
+
+    const url = `https://staging.uipath.com/uipathlabs/Playground/maestro_/processes/${PROCESS_DEFINITION_KEY}/instances/${selectedInvoice.maestroProcessKey}?folderKey=${selectedInvoice.folderId}`;
+    window.open(url, '_blank');
+  };
 
   const fetchVariablesDebug = async () => {
     if (!selectedInvoice?.maestroProcessKey || !selectedInvoice?.folderId) {
@@ -91,9 +103,9 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
     <>
       <div className="h-full overflow-y-auto">
         {/* Invoice Header Section - Enhanced with 3 Tiers */}
-        <div className="bg-white border-b border-orange-100 p-6">
+        <div className="bg-white border-b border-white p-6">
           {/* Tier 1: Most Important - Invoice #, Status, Vendor */}
-          <div className="flex items-start gap-8 mb-6">
+          <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Invoice: {selectedInvoice.invoiceId || selectedInvoice.id}
@@ -102,7 +114,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                 Vendor: {selectedInvoice.vendorName || 'Unknown Vendor'}
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
               <span className={`px-5 py-2.5 text-base font-bold rounded-full shadow-sm border whitespace-nowrap ${getStatusColor(selectedInvoice.status)}`}>
                 Status: {selectedInvoice.status || 'Unknown'}
               </span>
@@ -144,9 +156,21 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                   )}
                 </span>
               )}
+              {hasProcessInstance && (
+                <button
+                  onClick={openMaestroProcess}
+                  className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-all duration-200 hover:shadow-md"
+                  title="Open in Maestro"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 13a5 5 0 007.42.8l.13-.13a5 5 0 000-7.08 5.01 5.01 0 00-7.07-.01l-3 3"/> 
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 11a5 5 0 00-7.42-.8l-.13.13a5 5 0 000 7.08 5.01 5.01 0 007.07.01l3-3"/> 
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
-          <div className="w-full h-1 bg-orange-400 my-6 rounded"></div>
+          <div className="w-full h-1 bg-orange-100 my-6 rounded"></div>
 
           {/* Tier 2 & 3: Side-by-side cards - Key Details and AI Agent Match Summary */}
           {processDetails.scriptResponse && (
@@ -159,72 +183,157 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                   </svg>
                   Key Details
                 </h3>
-                <div className="space-y-2.5 text-sm">
+                <div className="grid grid-cols-2 gap-4">
                   {/* Contract Number */}
-                  {processDetails.scriptResponse.keyDetails?.contract_number_invoice && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Contract Number:</span>
-                      <span className="font-medium text-gray-900 font-mono">
-                        {processDetails.scriptResponse.keyDetails.contract_number_invoice}
-                      </span>
-                    </div>
-                  )}
+                  {(() => {
+                    const contractNumber = processDetails.scriptResponse.summaryData?.ContractNumber ||
+                                          processDetails.scriptResponse.keyDetails?.contract_number_invoice ||
+                                          processDetails.scriptResponse.keyDetails?.contract_number_purchase_order;
+                    return contractNumber ? (
+                      <div>
+                        <span className="text-base text-gray-500 block mb-1">Contract Number</span>
+                        <span className="text-lg font-semibold text-gray-900 font-mono block">
+                          {contractNumber}
+                        </span>
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {/* Invoice Number */}
+                  {(() => {
+                    const invoiceNumber = processDetails.scriptResponse.summaryData?.InvoiceNumber ||
+                                         processDetails.scriptResponse.keyDetails?.invoice_number_invoice ||
+                                         selectedInvoice.invoiceId;
+                    return invoiceNumber ? (
+                      <div>
+                        <span className="text-base text-gray-500 block mb-1">Invoice Number</span>
+                        <span className="text-lg font-semibold text-gray-900 font-mono block">
+                          {invoiceNumber}
+                        </span>
+                      </div>
+                    ) : null;
+                  })()}
+
                   {/* Invoice Date */}
-                  {selectedInvoice.createdBy && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Invoice Date:</span>
-                      <span className="font-medium text-gray-900">
-                        {new Date(selectedInvoice.createdBy).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                      </span>
-                    </div>
-                  )}
+                  {(() => {
+                    const invoiceDate = processDetails.scriptResponse.keyDetails?.invoice_date ||
+                                       processDetails.scriptResponse.summaryData?.Timestamp ||
+                                       selectedInvoice.createdBy;
+                    return invoiceDate ? (
+                      <div>
+                        <span className="text-base text-gray-500 block mb-1">Invoice Date</span>
+                        <span className="text-lg font-semibold text-gray-900 block">
+                          {new Date(invoiceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                    ) : null;
+                  })()}
+
                   {/* Number of CLINs */}
                   {processDetails.scriptResponse.clinsData && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Number of CLINs:</span>
-                      <span className="font-medium text-gray-900">
+                    <div>
+                      <span className="text-base text-gray-500 block mb-1">Number of CLINs</span>
+                      <span className="text-lg font-semibold text-gray-900 block">
                         {processDetails.scriptResponse.clinsData.length}
                       </span>
                     </div>
                   )}
-                  {/* Shipment */}
-                  {processDetails.scriptResponse.keyDetails?.shipment && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Shipment:</span>
-                      <span className="font-medium text-gray-900">
-                        {processDetails.scriptResponse.keyDetails.shipment}
-                      </span>
-                    </div>
-                  )}
+
                   {/* Total Amount */}
-                  {processDetails.scriptResponse.keyDetails?.total_amount && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Total Amount:</span>
-                      <span className="font-medium text-gray-900">
-                        ${Number(processDetails.scriptResponse.keyDetails.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  )}
+                  {(() => {
+                    let totalAmount = processDetails.scriptResponse.keyDetails?.total_amount_invoice ||
+                                     processDetails.scriptResponse.summaryData?.TotalAmount;
+
+                    // If not found, sum up clinsData amounts
+                    if (!totalAmount && processDetails.scriptResponse.clinsData) {
+                      totalAmount = processDetails.scriptResponse.clinsData.reduce((sum: number, clin: any) => {
+                        const amount = parseFloat(clin.amount_invoice || clin.amount || 0);
+                        return sum + amount;
+                      }, 0);
+                    }
+
+                    return totalAmount ? (
+                      <div>
+                        <span className="text-base text-gray-500 block mb-1">Total Amount (Invoice)</span>
+                        <span className="text-lg font-semibold text-gray-900 block">
+                          ${Number(totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {/* Payment Date */}
+                  {(() => {
+                    let paymentDate = processDetails.scriptResponse.keyDetails?.payment_date ||
+                                      processDetails.scriptResponse.keyDetails?.paymentDueDate;
+
+                    if (!paymentDate) {
+                      // If the first two fields are empty, use 30 days from now
+                      paymentDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+                    } else if (!paymentDate) {
+                      paymentDate = (selectedInvoice as any).payment_date ||
+                                    (selectedInvoice as any).payment_due ||
+                                    processDetails.scriptResponse.keyDetails?.settlement_date;
+                    }
+                    return (
+                      <div>
+                        <span className="text-base text-gray-500 block mb-1">Payment Date</span>
+                        <span className="text-lg font-semibold text-gray-900 block">
+                          {paymentDate ? new Date(paymentDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Shipment Number */}
+                  {(() => {
+                    const shipmentNumber = processDetails.scriptResponse.keyDetails?.shipment_reference ||
+                                          (processDetails.scriptResponse.clinsData && processDetails.scriptResponse.clinsData[0]?.po_shipment_number) ||
+                                          (processDetails.scriptResponse.clinsData && processDetails.scriptResponse.clinsData[0]?.shipment_number_goods_receipt);
+                    return (
+                      <div>
+                        <span className="text-base text-gray-500 block mb-1">Shipment Number</span>
+                        <span className="text-lg font-semibold text-gray-900 block">
+                          {shipmentNumber || 'N/A'}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Ship Address */}
+                  {(() => {
+                    const shipAddress = processDetails.scriptResponse.keyDetails?.delivery_point ||
+                                       '123 Main Street, Washington, DC 20001';
+                    return (
+                      <div className="col-span-2">
+                        <span className="text-base text-gray-500 block mb-1">Ship Address</span>
+                        <span className="text-lg font-semibold text-gray-900 block">
+                          {shipAddress}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
               {/* AI Agent Match Summary Card */}
               {processDetails.scriptResponse.summaryData && (
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-200">
-                    <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <img
-                        src={agentIcon}
-                        alt="Agent"
-                        className="w-5 h-5 inline-block align-middle"
-                      />
-                      AI Agent Match Summary
-                    </h3>
-                  <div className="space-y-3 text-sm">
+                <div 
+                  onClick={() => setActiveTab('evaluations')}
+                  className="bg-white rounded-lg p-6 shadow-sm border border-orange-200 cursor-pointer hover:shadow-md hover:border-orange-300 transition-all duration-200"
+                >
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-3">
+                    AI Agent Match Summary
+                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </h3>
+                  <div className="space-y-5 text-lg">
                     {/* Overall Status */}
                     {processDetails.scriptResponse.summaryData.OverallStatus && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-500">Status:</span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      <div className="">
+                        <span className="text-gray-500 text-lg block mb-1">Status:</span>
+                        <span className={`px-4 py-2 rounded-full text-base font-semibold ${
                           processDetails.scriptResponse.summaryData.OverallStatus === 'FullyMatched' ? 'bg-green-100 text-green-800' :
                           processDetails.scriptResponse.summaryData.OverallStatus === 'PartiallyMatched' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
@@ -236,46 +345,52 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                     {/* Recommendations */}
                     {processDetails.scriptResponse.summaryData.Recommendations && (
                       <div>
-                        <span className="text-gray-500 block mb-1">Recommendations:</span>
-                        <p className="text-gray-900 text-xs leading-relaxed bg-gray-50 p-2 rounded">
-                          {processDetails.scriptResponse.summaryData.Recommendations}
-                        </p>
+                        <span className="text-gray-500 block mb-2 text-lg">Recommendations:</span>
+                        <ul className="list-disc pl-8 text-gray-900 text-base leading-relaxed bg-gray-50 p-4 rounded space-y-2">
+                          {Array.isArray(processDetails.scriptResponse.summaryData.Recommendations)
+                            ? processDetails.scriptResponse.summaryData.Recommendations.map((rec: string, i: number) => (
+                                <li key={i}>{rec}</li>
+                              ))
+                            : <li>{processDetails.scriptResponse.summaryData.Recommendations}</li>
+                          }
+                        </ul>
                       </div>
                     )}
-                    {/* Check Breakdown */}
+                    {/* Check Breakdown - KPI Style */}
                     <div>
-                      <span className="text-gray-500 block mb-1">Checks:</span>
-                      <div className="text-xs bg-gray-50 p-2 rounded space-y-1">
-                        <div>
-                          <span className="text-green-600 font-semibold">
-                            {processDetails.scriptResponse.summaryData.ChecksPassed || 0} passed
-                          </span>
-                          {' / '}
-                          <span className="text-red-600 font-semibold">
-                            {processDetails.scriptResponse.summaryData.ChecksFailed || 0} failed
-                          </span>
-                        </div>
-                        {(processDetails.scriptResponse.summaryData.FailedLow ||
-                          processDetails.scriptResponse.summaryData.FailedMedium ||
-                          processDetails.scriptResponse.summaryData.FailedHigh) && (
-                          <div className="text-gray-700">
-                            {processDetails.scriptResponse.summaryData.FailedLow > 0 && (
-                              <span className="text-yellow-600 mr-2">
-                                {processDetails.scriptResponse.summaryData.FailedLow} low
-                              </span>
-                            )}
-                            {processDetails.scriptResponse.summaryData.FailedMedium > 0 && (
-                              <span className="text-orange-600 mr-2">
-                                {processDetails.scriptResponse.summaryData.FailedMedium} medium
-                              </span>
-                            )}
-                            {processDetails.scriptResponse.summaryData.FailedHigh > 0 && (
-                              <span className="text-red-600">
-                                {processDetails.scriptResponse.summaryData.FailedHigh} high
-                              </span>
-                            )}
+                      <span className="text-gray-500 block mb-2 text-lg">Validation Checks:</span>
+                      <div className="flex divide-x divide-gray-300">
+                        {/* Passed */}
+                        <div className="text-center flex-1 px-3">
+                          <div className="text-2xl font-bold text-green-700">
+                            {processDetails.scriptResponse.summaryData.ChecksPassed || 0}
                           </div>
-                        )}
+                          <div className="text-xs text-green-600 font-medium mt-1">Passed</div>
+                        </div>
+                        
+                        {/* Failed High */}
+                        <div className="text-center flex-1 px-3">
+                          <div className="text-2xl font-bold text-red-700">
+                            {processDetails.scriptResponse.summaryData.ChecksFailed_High || 0}
+                          </div>
+                          <div className="text-xs text-red-600 font-medium mt-1">Failed High</div>
+                        </div>
+                        
+                        {/* Failed Medium */}
+                        <div className="text-center flex-1 px-3">
+                          <div className="text-2xl font-bold text-orange-700">
+                            {processDetails.scriptResponse.summaryData.ChecksFailed_Medium || 0}
+                          </div>
+                          <div className="text-xs text-orange-600 font-medium mt-1">Failed Medium</div>
+                        </div>
+                        
+                        {/* Failed Low */}
+                        <div className="text-center flex-1 px-3">
+                          <div className="text-2xl font-bold text-yellow-700">
+                            {processDetails.scriptResponse.summaryData.ChecksFailed_Low || 0}
+                          </div>
+                          <div className="text-xs text-yellow-600 font-medium mt-1">Failed Low</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -365,7 +480,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
               </div>
             </div>
           )}
-
+<div className="w-full h-1 bg-orange-100 my-6 rounded"></div>
   
         </div>
 

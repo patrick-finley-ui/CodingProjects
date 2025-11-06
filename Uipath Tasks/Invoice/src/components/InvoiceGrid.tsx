@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { InvoiceRecord } from '../types/invoices';
 import { formatCurrency, formatDate, getStatusColor } from '../utils/formatters';
 
@@ -10,13 +10,22 @@ interface InvoiceGridProps {
   onInvoiceSelect?: (invoice: InvoiceRecord) => void;
   selectedInvoiceId?: string;
   onRefresh?: () => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (status: string) => void;
 }
 
-export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRefresh }: InvoiceGridProps) => {
+export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRefresh, statusFilter, onStatusFilterChange }: InvoiceGridProps) => {
   const [sortField, setSortField] = useState<SortField>('updateTime');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [filterStatus, setFilterStatus] = useState<string>('All');
+  const [filterStatus, setFilterStatus] = useState<string>(statusFilter || 'All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Update internal state when prop changes
+  useEffect(() => {
+    if (statusFilter !== undefined) {
+      setFilterStatus(statusFilter);
+    }
+  }, [statusFilter]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -132,7 +141,12 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
         <div className="flex gap-2">
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              if (onStatusFilterChange) {
+                onStatusFilterChange(e.target.value);
+              }
+            }}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-uipath-orange focus:border-transparent"
           >
             <option value="All">All Statuses</option>

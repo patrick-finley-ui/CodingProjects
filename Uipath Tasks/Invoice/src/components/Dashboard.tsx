@@ -39,6 +39,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
   const [invoiceFilePath, setInvoiceFilePath] = useState('Invoice-INV-1025.pdf');
   const [isStartingProcess, setIsStartingProcess] = useState(false);
   const [startProcessError, setStartProcessError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('All');
 
   const fetchInvoices = async () => {
     try {
@@ -300,7 +301,21 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       bgColor: 'bg-white',
       description: 'All invoices in the system',
     },
+   
     {
+      title: 'Pending Review',
+      value: metrics.pendingReview,
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      color: 'bg-yellow-500',
+      textColor: 'text-yellow-600',
+      bgColor: 'bg-white',
+      description: 'Invoices awaiting review',
+    },
+     {
       title: 'Total Invoice Value',
       value: '$18.5B',
       customContent: (
@@ -328,19 +343,6 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       textColor: 'text-gray-700',
       bgColor: 'bg-white',
       description: 'Sum of all invoice amounts',
-    },
-    {
-      title: 'Pending Review',
-      value: metrics.pendingReview,
-      icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      color: 'bg-yellow-500',
-      textColor: 'text-yellow-600',
-      bgColor: 'bg-white',
-      description: 'Invoices awaiting review',
     },
     {
       title: 'Approved',
@@ -424,7 +426,14 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
         {statCards.map((card, index) => (
           <div
             key={index}
-            className={`${card.bgColor} rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow`}
+            onClick={() => {
+              if (card.title === 'Pending Review') {
+                setStatusFilter('Pending Review');
+              }
+            }}
+            className={`${card.bgColor} rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow ${
+              card.title === 'Pending Review' ? 'cursor-pointer hover:border-yellow-400' : ''
+            }`}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -502,13 +511,16 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
 
         {/* Toggle between Grid and Detail View */}
         {!selectedInvoice ? (
-          /* Grid View - Full Width */
-          <div className="overflow-y-auto">
+            /* Grid View - Full Width */
+            
+          <div className="overflow-y-auto bg-white rounded-lg border border-gray-200 shadow-sm p-5">
             <InvoiceGrid
               invoices={invoices}
               onInvoiceSelect={handleInvoiceSelect}
               selectedInvoiceId={undefined}
               onRefresh={fetchInvoices}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
             />
           </div>
         ) : (
