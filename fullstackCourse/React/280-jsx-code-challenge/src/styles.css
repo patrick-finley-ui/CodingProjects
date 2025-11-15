@@ -1,0 +1,28 @@
+ img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 0%;
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #000;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    &:hover {       
+        transform: scale(1.1);
+        box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.8);
+    }
+ }
+
+.heading {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #000;
+    text-align: center;
+    text-decoration: underline;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    word-spacing: 0.2em;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
