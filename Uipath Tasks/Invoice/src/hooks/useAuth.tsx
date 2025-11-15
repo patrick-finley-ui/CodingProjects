@@ -25,6 +25,8 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
     const newSdk = new UiPath(config);
     // Expose SDK to window for console testing
     (window as any).sdk = newSdk;
+    console.log('🔧 UiPath SDK available in console as `sdk`');
+    console.log('Try: sdk.processes, sdk.maestro, sdk.entities, etc.');
     return newSdk;
   });
 

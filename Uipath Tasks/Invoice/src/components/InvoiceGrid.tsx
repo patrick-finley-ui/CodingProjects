@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { InvoiceRecord } from '../types/invoices';
-import { formatCurrency, formatDate, getStatusColor } from '../utils/formatters';
+import { formatCurrency, formatDate, getStatusColor, formatInvoiceIdWithTimestamp } from '../utils/formatters';
 
 type SortField = 'invoiceId' | 'vendorName' | 'invoiceTotal' | 'status' | 'acceptanceDate' | 'updateTime';
 type SortDirection = 'asc' | 'desc';
@@ -10,11 +10,12 @@ interface InvoiceGridProps {
   onInvoiceSelect?: (invoice: InvoiceRecord) => void;
   selectedInvoiceId?: string;
   onRefresh?: () => void;
+  isRefreshing?: boolean;
   statusFilter?: string;
   onStatusFilterChange?: (status: string) => void;
 }
 
-export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRefresh, statusFilter, onStatusFilterChange }: InvoiceGridProps) => {
+export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRefresh, isRefreshing, statusFilter, onStatusFilterChange }: InvoiceGridProps) => {
   const [sortField, setSortField] = useState<SortField>('updateTime');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [filterStatus, setFilterStatus] = useState<string>(statusFilter || 'All');
@@ -157,10 +158,16 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
           {onRefresh && (
             <button
               onClick={onRefresh}
-              className="px-4 py-2 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              disabled={isRefreshing}
+              className="px-4 py-2 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Refresh data"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className={`w-5 h-5 text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
@@ -277,7 +284,7 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
                     }`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {invoice.invoiceId || '-'}
+                      {formatInvoiceIdWithTimestamp(invoice.invoiceId, invoice.createTime)}
                     </td>
                        <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusColor(invoice.status)}`}>

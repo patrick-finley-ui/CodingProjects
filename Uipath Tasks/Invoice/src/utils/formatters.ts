@@ -52,7 +52,7 @@ export const formatDateTime = (dateString?: string): string => {
 
 export const getStatusColor = (status?: string): string => {
   if (!status) return 'bg-gray-100 text-gray-800 border-gray-200';
-  
+
   switch (status.toLowerCase()) {
     case 'approved':
     case 'paid':
@@ -66,6 +66,27 @@ export const getStatusColor = (status?: string): string => {
       return 'bg-blue-100 text-blue-800 border-blue-200';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
+export const formatInvoiceIdWithTimestamp = (invoiceId?: string, createTime?: string): string => {
+  if (!invoiceId) return '-';
+
+  if (!createTime) {
+    return invoiceId;
+  }
+
+  try {
+    const date = new Date(createTime);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    const timestamp = `${month}${day}${hours}${minutes}`;
+    return `${invoiceId}-${timestamp}`;
+  } catch {
+    return invoiceId;
   }
 };
 

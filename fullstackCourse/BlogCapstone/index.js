@@ -60,6 +60,7 @@ app.get("/", (req, res) => {
     blogPosts = loadBlogPosts();
     res.render("index.ejs", {
         blogPosts: blogPosts,
+    
         navLinks: navLinks,
         showFilters: true,  // Add flag to show filter buttons
         deleted: req.query.deleted === 'true'  // Check if post was deleted

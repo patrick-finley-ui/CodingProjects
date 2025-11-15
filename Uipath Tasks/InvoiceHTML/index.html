@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Match Review</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="header-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="header-title">Invoice Match Review</h1>
+                        <p class="header-subtitle" id="contract-info">Contract - Invoice</p>
+                    </div>
+                </div>
+                <button class="btn-primary" id="export-btn">Export Report</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Key Details Summary -->
+            <section class="card-section">
+                <div class="card">
+                    <div class="card-header" onclick="toggleSection('key-details')">
+                        <div class="card-header-left">
+                            <h2 class="card-title">Key Details Summary</h2>
+                            <svg class="chevron" id="chevron-key-details" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <span class="badge badge-success">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            Verified
+                        </span>
+                    </div>
+                    <div class="card-content" id="key-details-content">
+                        <div class="key-details-grid" id="key-details-grid">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                        <div class="verification-summary" id="verification-summary">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Check Summary -->
+            <section class="card-section">
+                <div class="card">
+                    <div class="card-header" onclick="toggleSection('check-summary')">
+                        <div class="card-header-left">
+                            <h2 class="card-title">Check Summary</h2>
+                            <svg class="chevron" id="chevron-check-summary" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="card-content" id="check-summary-content">
+                        <div class="stats-grid" id="stats-grid">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Validation Checks -->
+            <section class="card-section">
+                <div class="card">
+                    <div class="card-header" onclick="toggleSection('validation-checks')">
+                        <div class="card-header-left">
+                            <h2 class="card-title">Validation Checks</h2>
+                            <svg class="chevron" id="chevron-validation-checks" width="20" height="20"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <p class="scope-text" id="scope-text">Header, CLIN, Acceptance, Financial, Data Integrity,
+                            Logical scopes</p>
+                    </div>
+                    <div class="card-content" id="validation-checks-content">
+                        <div class="tabs-container">
+                            <div class="tabs">
+                                <button class="tab-btn active" data-filter="all" onclick="filterChecks('all')">All
+                                    (<span id="count-all">0</span>)</button>
+                                <button class="tab-btn" data-filter="failed" onclick="filterChecks('failed')">Failed
+                                    (<span id="count-failed">0</span>)</button>
+                                <button class="tab-btn" data-filter="flagged" onclick="filterChecks('flagged')">Flagged
+                                    (<span id="count-flagged">0</span>)</button>
+                                <button class="tab-btn" data-filter="passed" onclick="filterChecks('passed')">Passed
+                                    (<span id="count-passed">0</span>)</button>
+                            </div>
+                        </div>
+                        <div class="evaluations-grid" id="evaluations-grid">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contract Line Items -->
+            <section class="card-section">
+                <div class="card">
+                    <div class="card-header" onclick="toggleSection('clins')">
+                        <div class="card-header-left">
+                            <h2 class="card-title">Contract Line Items</h2>
+                            <svg class="chevron" id="chevron-clins" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <p class="scope-text">Click on a row to expand details</p>
+                    </div>
+                    <div class="card-content" id="clins-content">
+                        <div class="table-container">
+                            <table class="clin-table">
+                                <thead>
+                                    <tr>
+                                        <th width="40"></th>
+                                        <th>CLIN</th>
+                                        <th>Description</th>
+                                        <th class="text-right">Quantity</th>
+                                        <th class="text-right">Unit Price</th>
+                                        <th class="text-right">Amount</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clin-table-body">
+                                    <!-- Populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recommendations -->
+            <section class="card-section" id="recommendations-section" style="display: none;">
+                <div class="recommendations-card">
+                    <h2 class="recommendations-title">Recommendations</h2>
+                    <ul class="recommendations-list" id="recommendations-list">
+                        <!-- Populated by JavaScript -->
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Document Viewer Modal -->
+    <div class="modal" id="document-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Document Viewer</h3>
+                <button class="modal-close" onclick="closeDocumentModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="document-modal-body">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { InvoiceRecord, ScriptResponseData } from '../types/invoices';
 import type { ProcessInstanceExecutionHistoryResponse } from '@uipath/uipath-typescript';
-import { formatDateTime, getStatusColor } from '../utils/formatters';
+import { formatDateTime, getStatusColor, formatInvoiceIdWithTimestamp } from '../utils/formatters';
 
 interface InvoiceDetailsProps {
   selectedInvoice: InvoiceRecord | null;
@@ -29,7 +29,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
   const showDebugBox = import.meta.env.VITE_SHOW_DEBUG_BOX === 'true';
 
   // Hardcoded process definition key - same as in Dashboard.tsx
-  const PROCESS_DEFINITION_KEY = '44479d67-c3d0-41e4-9ae0-3b337e320f9e';
+  const PROCESS_DEFINITION_KEY = import.meta.env.VITE_MAESTRO_PROCESS_KEY;
 
   const openMaestroProcess = () => {
     if (!selectedInvoice?.maestroProcessKey || !selectedInvoice?.folderId) {
@@ -108,7 +108,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
           <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Invoice: {selectedInvoice.invoiceId || selectedInvoice.id}
+                Invoice: {formatInvoiceIdWithTimestamp(selectedInvoice.invoiceId || selectedInvoice.id, selectedInvoice.createTime)}
               </h1>
               <p className="text-xl font-semibold text-orange-700 mb-1">
                 Vendor: {selectedInvoice.vendorName || 'Unknown Vendor'}
@@ -524,7 +524,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                         onClick={() => setActiveTab('clins')}
                         className={`px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 ${
                           activeTab === 'clins'
-                            ? 'bg-white text-purple-700 border-t-2 border-l border-r border-purple-500 shadow-sm'
+                            ? 'bg-white text-orange-700 border-t-2 border-l border-r border-orange-300 shadow-sm'
                             : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                         }`}
                         role="tab"
@@ -537,7 +537,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                           </svg>
                           Contract Line Items
                           {processDetails.scriptResponse.clinsData && (
-                            <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
+                            <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
                               {processDetails.scriptResponse.clinsData.length}
                             </span>
                           )}
@@ -547,7 +547,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                         onClick={() => setActiveTab('evaluations')}
                         className={`px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 ${
                           activeTab === 'evaluations'
-                            ? 'bg-white text-blue-700 border-t-2 border-l border-r border-blue-500 shadow-sm'
+                            ? 'bg-white text-orange-700 border-t-2 border-l border-r border-orange-500 shadow-sm'
                             : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                         }`}
                         role="tab"
@@ -555,12 +555,12 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                         aria-controls="evaluations-panel"
                       >
                         <div className="flex items-center gap-2">
-                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                           </svg>
                           AI Match Evaluations
                           {processDetails.scriptResponse.matchEvaluations && (
-                            <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                            <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
                               {processDetails.scriptResponse.matchEvaluations.length}
                             </span>
                           )}
@@ -570,7 +570,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                         onClick={() => setActiveTab('execution')}
                         className={`px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 ${
                           activeTab === 'execution'
-                            ? 'bg-white text-blue-700 border-t-2 border-l border-r border-blue-500 shadow-sm'
+                            ? 'bg-white text-orange-700 border-t-2 border-l border-r border-orange-500 shadow-sm'
                             : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                         }`}
                         role="tab"
@@ -578,7 +578,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                         aria-controls="execution-panel"
                       >
                         <div className="flex items-center gap-2">
-                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           Execution History
@@ -592,16 +592,16 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                 {activeTab === 'clins' && processDetails.scriptResponse?.clinsData && processDetails.scriptResponse.clinsData.length > 0 && (
                   <div id="clins-panel" role="tabpanel" aria-labelledby="clins-tab">
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100 p-4">
+                      <div className="bg-gradient-to-r from-orange-50 to-pink-50 border-b border-orange-100 p-4">
                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                          <div className="p-2 bg-purple-100 rounded-lg">
-                            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="p-2 bg-orange-100 rounded-lg">
+                            <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                             </svg>
                           </div>
                           Contract Line Items (CLINs)
                         </h3>
-                        <p className="text-purple-700 mt-1">Detailed line item information</p>
+                        <p className="text-orange-700 mt-1">Detailed line item information</p>
                       </div>
 
                       <div className="overflow-x-auto">
@@ -636,16 +636,16 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                 {activeTab === 'evaluations' && processDetails.scriptResponse?.matchEvaluations && processDetails.scriptResponse.matchEvaluations.length > 0 && (
                   <div id="evaluations-panel" role="tabpanel" aria-labelledby="evaluations-tab">
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-4">
+                      <div className="bg-orange-50 border-b border-orange-100 p-4">
                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                          <div className="p-2 bg-blue-100 rounded-lg">
-                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="p-2 bg-orange-100 rounded-lg">
+                            <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
                           </div>
                           AI Match Evaluations
                         </h3>
-                        <p className="text-blue-700 mt-1">Detailed AI mismatch analysis</p>
+                        <p className="text-orange-700 mt-1">Detailed AI mismatch analysis</p>
                       </div>
 
                       <div className="overflow-x-auto">
@@ -703,16 +703,16 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                 {activeTab === 'execution' && processDetails.executionHistory && processDetails.executionHistory.length > 0 && (
                   <div>
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-4">
+                      <div className="bg-orange-50 to-indigo-50 border-b border-orange-100 p-4">
                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                          <div className="p-2 bg-blue-100 rounded-lg">
-                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="p-2 bg-orange-100 rounded-lg">
+                            <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
                           Execution History
                         </h3>
-                        <p className="text-blue-700 mt-1">Activity trail for this invoice process</p>
+                        <p className="text-orange-700 mt-1">Activity trail for this invoice process</p>
                       </div>
 
                       <div className="max-h-96 overflow-y-auto p-4">
@@ -730,7 +730,7 @@ export const InvoiceDetails = ({ selectedInvoice, processDetails }: InvoiceDetai
                                     </div>
                                   ) : (
                                     <div className="w-6 h-6 flex items-center justify-center">
-                                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-200 border-t-blue-600"></div>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-orange-200 border-t-orange-600"></div>
                                     </div>
                                   )}
                                   {index < (processDetails.executionHistory?.length ?? 0) - 1 && (

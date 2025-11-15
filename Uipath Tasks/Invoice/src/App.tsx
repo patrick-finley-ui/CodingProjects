@@ -4,14 +4,28 @@ import { LoginScreen } from './components/LoginScreen'
 import { Dashboard } from './components/Dashboard'
 import type { UiPathSDKConfig } from '@uipath/uipath-typescript'
 
+// Determine if we should use CORS proxy (set VITE_USE_CORS_PROXY=true to enable)
+const useCorsProxy = import.meta.env.VITE_USE_CORS_PROXY === 'true'
+
 const authConfig: UiPathSDKConfig = {
   clientId: import.meta.env.VITE_UIPATH_CLIENT_ID || 'your-client-id',
   orgName: import.meta.env.VITE_UIPATH_ORG_NAME || 'your-organization',
   tenantName: import.meta.env.VITE_UIPATH_TENANT_NAME || 'your-tenant',
-  baseUrl: import.meta.env.VITE_UIPATH_BASE_URL || 'https://staging.uipath.com/',
+  // Use proxy in development if enabled, otherwise use direct URL
+  baseUrl: (import.meta.env.DEV && useCorsProxy)
+    ? window.location.origin 
+    : (import.meta.env.VITE_UIPATH_BASE_URL || 'https://staging.uipath.com/'),
   redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI || window.location.origin,
   scope: import.meta.env.VITE_UIPATH_SCOPE || 'offline_access',
 }
+
+// Log configuration for debugging
+console.log('🔧 Auth Config:', {
+  mode: import.meta.env.DEV ? 'DEVELOPMENT' : 'PRODUCTION',
+  corsProxy: useCorsProxy ? 'ENABLED ✅' : 'DISABLED ❌',
+  baseUrl: authConfig.baseUrl,
+  redirectUri: authConfig.redirectUri,
+})
 
 function AppContent() {
   const { isAuthenticated, isLoading, sdk } = useAuth()

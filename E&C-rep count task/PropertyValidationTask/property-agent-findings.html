@@ -1,0 +1,802 @@
+<!-- Property Agent Findings Display - UiPath Custom HTML Component -->
+<div class="container">
+    <!-- Property Data Section -->
+    <div class="section">
+        <h2>Property Information</h2>
+        <div class="property-grid">
+            <div class="property-item">
+                <label>Property ID:</label>
+                <span id="propertyId">-</span>
+            </div>
+            <div class="property-item">
+                <label>Description:</label>
+                <span id="propertyDescription">-</span>
+            </div>
+            <div class="property-item">
+                <label>Project ID:</label>
+                <span id="projectId">-</span>
+            </div>
+            <div class="property-item">
+                <label>Cost Delta:</label>
+                <span id="costDelta">-</span>
+            </div>
+            <div class="property-item">
+                <label>Change Data:</label>
+                <span id="changeData">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Agent Summary Section -->
+    <div class="section">
+        <h2>AI Agent Summary/Validation Notes</h2>
+        <div class="summary-content" id="agentSummary">
+            <p>Loading agent findings...</p>
+        </div>
+    </div>
+
+    <!-- KSDs Section -->
+    <div class="section">
+        <h2>KSDs</h2>
+        <div class="table-container">
+            <table class="documents-table">
+                <thead>
+                    <tr>
+                        <th>Document Name</th>
+                        <th>Document Type</th>
+                        <th>Match/Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="primaryRecord">No record found</td>
+                        <td>Primary DD1354 Record</td>
+                        <td id="dd1354Confidence">No confidence data available</td>
+                    </tr>
+                    <tr>
+                        <td id="ksd1">No document found</td>
+                        <td>Supporting Due Diligence Document #1</td>
+                        <td id="ksd1Reason">No confidence data available</td>
+                    </tr>
+                    <tr>
+                        <td id="ksd2">No document found</td>
+                        <td>Supporting Due Diligence Document #2</td>
+                        <td id="ksd2Reason">No confidence data available</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- User Notes Section -->
+    <div class="section">
+        <h2>User Notes</h2>
+        <div class="notes-container">
+            <textarea id="userNotes" placeholder="Enter your notes about this property analysis..." rows="4"></textarea>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="alertModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Notification</h3>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body" id="alertMessage">
+                <!-- Alert message will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button id="alertOk" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // UiPath Property Agent Findings App
+    let variableListeners = {};
+    let isInitialized = false;
+
+    // Safe initialization function
+    function initializeApp() {
+        if (isInitialized) return;
+
+        try {
+            setupEventListeners();
+            setupUiPathCommunication();
+
+            // Load demo data for non-UiPath variables (property info, agent summary, etc.)
+            loadNonUiPathDemoData();
+
+            isInitialized = true;
+            console.log('Property Agent Findings app initialized successfully');
+        } catch (error) {
+            console.error('Initialization error:', error);
+            showMessage('Initialization failed: ' + error.message);
+        }
+    }
+
+    // Initialize the application with multiple fallback methods (like scriptEC.js)
+    function initializeApplication() {
+        console.log('Initializing Property Agent Findings application...');
+
+        // Try multiple initialization methods for UiPath compatibility
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            // DOM is already loaded
+            initializeApp();
+        }
+
+        // Fallback: try again after a short delay
+        setTimeout(() => {
+            if (!document.body.querySelector('.container')) {
+                console.log('Retrying initialization...');
+                initializeApp();
+            }
+        }, 100);
+
+        // Additional fallback for UiPath
+        setTimeout(() => {
+            if (!document.body.querySelector('.container')) {
+                console.log('Final initialization attempt...');
+                initializeApp();
+            }
+        }, 500);
+    }
+
+    // Setup event listeners with safety checks
+    function setupEventListeners() {
+        // User notes input
+        const userNotes = document.getElementById('userNotes');
+        if (userNotes) {
+            userNotes.addEventListener('input', handleNotesChange);
+        }
+
+        // Modal close buttons
+        const closeModal = document.getElementById('closeModal');
+        if (closeModal) {
+            closeModal.addEventListener('click', hideAlert);
+        }
+
+        const alertOk = document.getElementById('alertOk');
+        if (alertOk) {
+            alertOk.addEventListener('click', hideAlert);
+        }
+
+        // Close modal when clicking outside
+        const modal = document.getElementById('alertModal');
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    hideAlert();
+                }
+            });
+        }
+    }
+
+    // UiPath communication setup
+    function setupUiPathCommunication() {
+        if (typeof App !== 'undefined') {
+            console.log('UiPath environment detected');
+
+            // // Listen for property data changes
+            // variableListeners.propertyData = App.onVariableChange('propertyData', (value) => {
+            //     console.log('Property data received:', value);
+            //     updatePropertyData(value);
+            // });
+
+            // // Listen for agent findings changes (for summary)
+            // variableListeners.agentFindings = App.onVariableChange('agentFindings', (value) => {
+            //     console.log('Agent findings received:', value);
+            //     updateAgentFindings(value);
+            // });
+
+            // Listen for individual cost delta variables (handle them separately)
+            variableListeners.costDelta1 = App.onVariableChange('costDelta1', (value) => {
+                console.log('costDelta1 received:', value);
+                updateCostDeltaDisplay();
+            });
+
+            variableListeners.costDelta2 = App.onVariableChange('costDelta2', (value) => {
+                console.log('costDelta2 received:', value);
+                updateCostDeltaDisplay();
+            });
+
+            // Listen for document 1354
+            variableListeners.FileMatch_1354 = App.onVariableChange('FileMatch_1354', (value) => {
+                console.log('FileMatch_1354 received:', value);
+                const primaryRecord = document.getElementById('primaryRecord');
+                if (primaryRecord) {
+                    primaryRecord.textContent = value || 'No record found';
+                }
+            });
+
+            variableListeners.matchingReason_1354 = App.onVariableChange('matchingReason_1354', (value) => {
+                console.log('matchingReason_1354 received:', value);
+                const dd1354Confidence = document.getElementById('dd1354Confidence');
+                if (dd1354Confidence) {
+                    dd1354Confidence.textContent = value || 'No confidence data available';
+                }
+            });
+
+            // Listen for due diligence document 1
+            variableListeners.FileMatch1_DueDiligence = App.onVariableChange('FileMatch1_DueDiligence', (value) => {
+                console.log('FileMatch1_DueDiligence received:', value);
+                const ksd1 = document.getElementById('ksd1');
+                if (ksd1) {
+                    ksd1.textContent = value || 'No document found';
+                }
+            });
+
+            variableListeners.MatchingReason_DueDiligence1 = App.onVariableChange('MatchingReason_DueDiligence1', (value) => {
+                console.log('MatchingReason_DueDiligence1 received:', value);
+                const ksd1Reason = document.getElementById('ksd1Reason');
+                if (ksd1Reason) {
+                    ksd1Reason.textContent = value || 'No confidence data available';
+                }
+            });
+
+            // Listen for due diligence document 2
+            variableListeners.FileMatch2_DueDiligence = App.onVariableChange('FileMatch2_DueDiligence', (value) => {
+                console.log('FileMatch2_DueDiligence received:', value);
+                const ksd2 = document.getElementById('ksd2');
+                if (ksd2) {
+                    ksd2.textContent = value || 'No document found';
+                }
+            });
+
+            variableListeners.MatchingReason_DueDiligence2 = App.onVariableChange('MatchingReason_DueDiligence2', (value) => {
+                console.log('MatchingReason_DueDiligence2 received:', value);
+                const ksd2Reason = document.getElementById('ksd2Reason');
+                if (ksd2Reason) {
+                    ksd2Reason.textContent = value || 'No confidence data available';
+                }
+            });
+
+            // Get initial values asynchronously with a small delay to ensure HTML is fully rendered
+            // Per UiPath guidance: "Check that the HTML control has fully rendered before accessing the variable"
+            setTimeout(() => {
+                getInitialVariableValues();
+            }, 100);
+        } else {
+            console.log('Running outside UiPath - using demo data');
+            // Use setTimeout to delay demo data load, similar to scriptEC.js pattern
+            setTimeout(() => {
+                loadDemoData();
+            }, 100);
+        }
+    }
+
+    // Helper function to update cost delta display
+    function updateCostDeltaDisplay() {
+        if (typeof App !== 'undefined' && App.getVariable) {
+            App.getVariable('costDelta1').then(costDelta1 => {
+                App.getVariable('costDelta2').then(costDelta2 => {
+                    const costDeltaElement = document.getElementById('costDelta');
+                    if (costDeltaElement) {
+                        if (costDelta1 && costDelta2) {
+                            costDeltaElement.textContent = costDelta1 + ' | ' + costDelta2;
+                        } else if (costDelta1) {
+                            costDeltaElement.textContent = costDelta1;
+                        } else if (costDelta2) {
+                            costDeltaElement.textContent = costDelta2;
+                        }
+                    }
+                });
+            });
+        }
+    }
+
+    // Get initial variable values from UiPath (async function to handle promises)
+    async function getInitialVariableValues() {
+        try {
+            if (typeof App !== 'undefined' && App.getVariable) {
+                console.log('Retrieving initial variable values from UiPath...');
+
+                // Get initial cost deltas - use the helper function to display them
+                updateCostDeltaDisplay();
+
+                // Get initial document 1354
+                const initialFileMatch1354 = await App.getVariable('FileMatch_1354');
+                console.log('FileMatch_1354 value:', initialFileMatch1354);
+                const initialMatchingReason1354 = await App.getVariable('matchingReason_1354');
+                console.log('matchingReason_1354 value:', initialMatchingReason1354);
+                if (initialFileMatch1354) {
+                    const primaryRecord = document.getElementById('primaryRecord');
+                    if (primaryRecord) primaryRecord.textContent = initialFileMatch1354;
+                }
+                if (initialMatchingReason1354) {
+                    const dd1354Confidence = document.getElementById('dd1354Confidence');
+                    if (dd1354Confidence) dd1354Confidence.textContent = initialMatchingReason1354;
+                }
+
+                // Get initial due diligence documents
+                const initialFileMatch1 = await App.getVariable('FileMatch1_DueDiligence');
+                console.log('FileMatch1_DueDiligence value:', initialFileMatch1);
+                const initialMatchingReason1 = await App.getVariable('MatchingReason_DueDiligence1');
+                console.log('MatchingReason_DueDiligence1 value:', initialMatchingReason1);
+                if (initialFileMatch1) {
+                    const ksd1 = document.getElementById('ksd1');
+                    if (ksd1) ksd1.textContent = initialFileMatch1;
+                }
+                if (initialMatchingReason1) {
+                    const ksd1Reason = document.getElementById('ksd1Reason');
+                    if (ksd1Reason) ksd1Reason.textContent = initialMatchingReason1;
+                }
+
+                const initialFileMatch2 = await App.getVariable('FileMatch2_DueDiligence');
+                console.log('FileMatch2_DueDiligence value:', initialFileMatch2);
+                const initialMatchingReason2 = await App.getVariable('MatchingReason_DueDiligence2');
+                console.log('MatchingReason_DueDiligence2 value:', initialMatchingReason2);
+                if (initialFileMatch2) {
+                    const ksd2 = document.getElementById('ksd2');
+                    if (ksd2) ksd2.textContent = initialFileMatch2;
+                }
+                if (initialMatchingReason2) {
+                    const ksd2Reason = document.getElementById('ksd2Reason');
+                    if (ksd2Reason) ksd2Reason.textContent = initialMatchingReason2;
+                }
+
+                console.log('Initial variable values retrieved successfully');
+            }
+        } catch (error) {
+            console.error('Error getting initial variable values:', error);
+        }
+    }
+
+    // Update property data display
+    function updatePropertyData(data) {
+        if (!data) return;
+
+        const propertyId = document.getElementById('propertyId');
+        if (propertyId && data.propertyId) {
+            propertyId.textContent = data.propertyId;
+        }
+
+        const propertyDescription = document.getElementById('propertyDescription');
+        if (propertyDescription && data.description) {
+            propertyDescription.textContent = data.description;
+        }
+
+        const projectId = document.getElementById('projectId');
+        if (projectId && data.projectId) {
+            projectId.textContent = data.projectId;
+        }
+
+        // Cost delta is now handled by individual variable listeners
+        const changeData = document.getElementById('changeData');
+        if (changeData && data.changeData) {
+            changeData.textContent = data.changeData;
+        }
+    }
+
+    // Update agent findings display (only for summary now, other fields handled by individual listeners)
+    function updateAgentFindings(findings) {
+        if (!findings) return;
+
+        // Update agent summary
+        const agentSummary = document.getElementById('agentSummary');
+        if (agentSummary && findings.summary) {
+            agentSummary.innerHTML = `<p>${findings.summary}</p>`;
+        }
+    }
+
+    // Update status indicator (removed - no longer needed)
+    function updateStatus(status) {
+        // Status functionality removed
+        console.log('Status:', status);
+    }
+
+    // Update user notes display
+    function updateUserNotes(notes) {
+        const userNotesElement = document.getElementById('userNotes');
+        if (userNotesElement && notes !== undefined) {
+            userNotesElement.value = notes || '';
+        }
+    }
+
+    // Handle user notes change
+    function handleNotesChange(event) {
+        const notes = event.target.value;
+        console.log('User notes changed:', notes);
+
+        if (typeof App !== 'undefined') {
+            App.setVariable('userNotes', notes);
+        }
+    }
+
+    // Custom alert function (replaces window.alert)
+    function showMessage(message) {
+        const alertModal = document.getElementById('alertModal');
+        const alertMessage = document.getElementById('alertMessage');
+
+        if (alertModal && alertMessage) {
+            alertMessage.textContent = message;
+            alertModal.style.display = 'block';
+        }
+    }
+
+    // Hide alert modal
+    function hideAlert() {
+        const alertModal = document.getElementById('alertModal');
+        if (alertModal) {
+            alertModal.style.display = 'none';
+        }
+    }
+
+    // Load demo data for non-UiPath variables (property info, agent summary, etc.)
+    function loadNonUiPathDemoData() {
+        console.log('Loading demo data for non-UiPath variables...');
+
+        // Set property information
+        const propertyId = document.getElementById('propertyId');
+        if (propertyId) propertyId.textContent = 'FAC NO: 10012, RPUID: 385337';
+
+        const propertyDescription = document.getElementById('propertyDescription');
+        if (propertyDescription) propertyDescription.textContent = 'CAPITAL IMPROVEMENT';
+
+        const projectId = document.getElementById('projectId');
+        if (projectId) projectId.textContent = '3027';
+
+        const changeData = document.getElementById('changeData');
+        if (changeData) changeData.textContent = 'Quantity correction identified';
+
+        // Set agent summary
+        const agentSummary = document.getElementById('agentSummary');
+        if (agentSummary) {
+            agentSummary.innerHTML = '<p>One 1354 document matched all input criteria. Two Due Diligence documents are related: one by Facility Number and RPUID, and one by Project Number as a fallback due to \'MULTI\' Facility Number/RPUID.</p>';
+        }
+    }
+
+    // Load demo data for testing outside UiPath
+    function loadDemoData() {
+        const demoPropertyData = {
+            propertyId: 'FAC NO: 10012, RPUID: 385337',
+            description: 'CAPITAL IMPROVEMENT',
+            projectId: '3027',
+            costDelta1: '$2,550,012.80 (within ±1 of $2,550,013)',
+            costDelta2: '$2,550,012.80 (backup)',
+            changeData: 'Quantity correction identified'
+        };
+
+        const demoAgentFindings = {
+            summary: 'One 1354 document matched all input criteria. Two Due Diligence documents are related: one by Facility Number and RPUID, and one by Project Number as a fallback due to \'MULTI\' Facility Number/RPUID.',
+            FileMatch_1354: 'Sample 22 P-3027_Interim_DD1354_Signed.pdf',
+            matchingReason_1354: 'Matched on FAC NO = 10012, RPUID = 385337, COST = 2550012.80 (within ±1 of 2550013), and ITEM Remark contains \'CAP IMP\' (partial match to \'CAPITAL IMPROVEMENT\'), Project Number is 3027',
+            FileMatch1_DueDiligence: 'Sample 22P-3027_Due_Diligence_10012_quantity_correction.pdf',
+            FileMatch2_DueDiligence: 'Sample 22 P-3027_Due_Diligence_for_Timeliness.pdf',
+            MatchingReason_DueDiligence1: 'Facility Number = 10012 and RPUID = 385337',
+            MatchingReason_DueDiligence2: 'Project Number = 3027 (Facility Number and RPUID are \'MULTI\')'
+        };
+
+        updatePropertyData(demoPropertyData);
+        updateAgentFindings(demoAgentFindings);
+
+        // Also set individual document fields for demo
+        const primaryRecord = document.getElementById('primaryRecord');
+        if (primaryRecord) primaryRecord.textContent = demoAgentFindings.FileMatch_1354 || 'No record found';
+
+        const dd1354Confidence = document.getElementById('dd1354Confidence');
+        if (dd1354Confidence) dd1354Confidence.textContent = demoAgentFindings.matchingReason_1354 || 'No confidence data available';
+
+        const ksd1 = document.getElementById('ksd1');
+        if (ksd1) ksd1.textContent = demoAgentFindings.FileMatch1_DueDiligence || 'No document found';
+
+        const ksd1Reason = document.getElementById('ksd1Reason');
+        if (ksd1Reason) ksd1Reason.textContent = demoAgentFindings.MatchingReason_DueDiligence1 || 'No confidence data available';
+
+        const ksd2 = document.getElementById('ksd2');
+        if (ksd2) ksd2.textContent = demoAgentFindings.FileMatch2_DueDiligence || 'No document found';
+
+        const ksd2Reason = document.getElementById('ksd2Reason');
+        if (ksd2Reason) ksd2Reason.textContent = demoAgentFindings.MatchingReason_DueDiligence2 || 'No confidence data available';
+
+        // Set cost delta
+        const costDelta = document.getElementById('costDelta');
+        if (costDelta) {
+            costDelta.textContent = (demoPropertyData.costDelta1 || '-') +
+                (demoPropertyData.costDelta2 ? (' | ' + demoPropertyData.costDelta2) : '');
+        }
+    }
+
+    // Cleanup function
+    function cleanup() {
+        Object.values(variableListeners).forEach(listener => {
+            if (typeof listener === 'function') {
+                listener();
+            }
+        });
+        variableListeners = {};
+    }
+
+    // Start the application
+    initializeApplication();
+</script>
+
+<style>
+    /* Reset and base styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        line-height: 1.4;
+        font-size: 14px;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 15px;
+        background-color: white;
+        min-height: 100vh;
+    }
+
+
+    /* Section styles */
+    .section {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #fafafa;
+        border-radius: 6px;
+        border-left: 3px solid #3498db;
+    }
+
+    .section h2 {
+        color: #2c3e50;
+        margin-bottom: 12px;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .section h3 {
+        color: #34495e;
+        margin-bottom: 10px;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    /* Summary content */
+    .summary-content {
+        background-color: white;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        font-size: 13px;
+    }
+
+    /* Property grid */
+    .property-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+    }
+
+    .property-item {
+        display: flex;
+        flex-direction: column;
+        background-color: white;
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+    }
+
+    .property-item label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 3px;
+        font-size: 12px;
+    }
+
+    .property-item span {
+        color: #34495e;
+        font-size: 13px;
+        word-break: break-word;
+    }
+
+    /* Documents table */
+    .table-container {
+        overflow-x: auto;
+        background-color: white;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+
+    .documents-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .documents-table th {
+        background-color: #3498db;
+        color: white;
+        padding: 10px 8px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .documents-table td {
+        padding: 8px;
+        border-bottom: 1px solid #e0e0e0;
+        vertical-align: top;
+    }
+
+    .documents-table tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .documents-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .documents-table td:first-child {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        word-break: break-all;
+        max-width: 200px;
+    }
+
+    .documents-table td:nth-child(2) {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 12px;
+    }
+
+    .documents-table td:last-child {
+        font-size: 12px;
+        line-height: 1.3;
+        color: #34495e;
+    }
+
+    /* User Notes */
+    .notes-container {
+        background-color: white;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+
+    #userNotes {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+        resize: vertical;
+        min-height: 80px;
+        background-color: #fafafa;
+        color: #333;
+    }
+
+    #userNotes:focus {
+        outline: none;
+        background-color: white;
+        border: 2px solid #3498db;
+    }
+
+    #userNotes::placeholder {
+        color: #95a5a6;
+        font-style: italic;
+    }
+
+    /* Modal styles */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: #2c3e50;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #95a5a6;
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .close-btn:hover {
+        color: #e74c3c;
+    }
+
+    .modal-body {
+        padding: 20px;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .modal-footer {
+        padding: 20px;
+        border-top: 1px solid #e0e0e0;
+        text-align: right;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 10px;
+        }
+
+        .property-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .documents-table {
+            font-size: 12px;
+        }
+
+        .documents-table th,
+        .documents-table td {
+            padding: 6px 4px;
+        }
+
+        #userNotes {
+            font-size: 13px;
+            padding: 10px;
+        }
+    }
+
+    /* Accessibility improvements */
+    #userNotes:focus {
+        outline: 2px solid #3498db;
+        outline-offset: 2px;
+    }
+
+    .close-btn:focus {
+        outline: 2px solid #3498db;
+        outline-offset: 2px;
+    }
+
+    /* Print styles */
+    @media print {
+        .modal {
+            display: none !important;
+        }
+    }
+</style>

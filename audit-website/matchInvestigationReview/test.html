@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mismatch Checks Review - Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .test-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .test-link:hover {
+            background-color: #0056b3;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>Mismatch Checks Review Dashboard - Test</h1>
+        <p>This page provides access to the Mismatch Checks Review Dashboard for testing purposes.</p>
+
+        <div class="status success">
+            <strong>✅ Project Created Successfully!</strong><br>
+            The mismatch checks review project has been created with all necessary files.
+        </div>
+
+        <div class="status info">
+            <strong>📋 Project Structure:</strong><br>
+            • index.html - Main dashboard interface<br>
+            • styles.css - Styling for the dashboard<br>
+            • script.js - JavaScript functionality with dummy data<br>
+            • All files are located in the matchInvestigationReview/ directory
+        </div>
+
+        <h2>Test Links:</h2>
+        <a href="index.html" class="test-link">Open Mismatch Checks Dashboard</a>
+
+        <h2>Features Implemented:</h2>
+        <ul>
+            <li>✅ Dashboard interface adapted for mismatch checks</li>
+            <li>✅ Table displaying all 24 mismatch checks from the provided data</li>
+            <li>✅ Filtering by Header Type and Check Status</li>
+            <li>✅ Search functionality across check titles, descriptions, and reasoning</li>
+            <li>✅ Expandable rows for detailed review (no modal)</li>
+            <li>✅ Dual status system: AI Review Status (read-only) and Check Status (editable)</li>
+            <li>✅ Pass/Deny/Override colored buttons that update Check Status</li>
+            <li>✅ Copy button to transfer AI Review Status "Passed" values to Check Status</li>
+            <li>✅ Severity assignment (Critical, High, Medium, Low, Informational)</li>
+            <li>✅ Justification field for severity decisions</li>
+            <li>✅ Notes field for additional review comments</li>
+            <li>✅ Responsive design for mobile and desktop</li>
+            <li>✅ Dummy data integration for testing</li>
+        </ul>
+
+        <h2>Data Structure:</h2>
+        <p>The dashboard uses the exact mismatch checks data structure you provided, including:</p>
+        <ul>
+            <li>Header Types: Header-Level, Line-Item, Financial, Acceptance and Receipt, Data Integrity, Logical or
+                Contextual</li>
+            <li>Check Statuses: Passed, Flagged, Skipped (inbound) and Passed, Denied, Overridden (outbound)</li>
+            <li>Dual Status System: AI Review Status (audit trail) and Check Status (user decisions)</li>
+            <li>All 24 specific mismatch checks with their descriptions and reasoning</li>
+            <li>Pass/Deny/Override colored buttons for Check Status management</li>
+        </ul>
+
+        <h2>How to Use:</h2>
+        <ol>
+            <li>Click "Open Mismatch Checks Dashboard" to access the main interface</li>
+            <li>Use the search bar to find specific checks</li>
+            <li>Use the filters to narrow down by Header Type or Check Status</li>
+            <li>Click the expand arrow (▶) to open detailed review for any mismatch check</li>
+            <li>Click Pass/Deny/Override buttons to set the Check Status</li>
+            <li>Use the "Copy AI Review Status to Check Status" button to bulk copy "Passed" values</li>
+            <li>Assign severity levels and provide justifications in the expandable form</li>
+            <li>Add notes and additional comments as needed</li>
+            <li>Click "Save Changes" to save your review</li>
+        </ol>
+    </div>
+</body>
+
+</html>

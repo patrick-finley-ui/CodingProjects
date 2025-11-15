@@ -16,6 +16,7 @@ const ENTITY_UUID = '9f8f532a-a6ae-f011-8e61-002248862cce';
 export const Dashboard = ({ sdk }: DashboardProps) => {
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceRecord | null>(null);
   const [processDetails, setProcessDetails] = useState<{
@@ -41,9 +42,13 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
   const [startProcessError, setStartProcessError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('All');
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
 
       const records = await sdk.entities.getRecordsById(ENTITY_UUID, {
@@ -56,12 +61,20 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       console.error('Error fetching invoices:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch invoices');
     } finally {
-      setLoading(false);
+      if (isRefresh) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
+  const handleRefresh = async () => {
+    await fetchInvoices(true);
+  };
+
   useEffect(() => {
-    fetchInvoices();
+    fetchInvoices(false);
   }, [sdk]);
 
   const fetchProcessDetails = async (invoice: InvoiceRecord) => {
@@ -164,8 +177,10 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       setIsStartingProcess(true);
       setStartProcessError(null);
 
-      const processKey = '44479d67-c3d0-41e4-9ae0-3b337e320f9e';
-      const folderId = 2465659;
+      const processKey = import.meta.env.VITE_MAESTRO_PROCESS_KEY || '44479d67-c3d0-41e4-9ae0-3b337e320f9e';
+      const folderId = import.meta.env.VITE_MAESTRO_FOLDER_KEY_ID
+        ? Number(import.meta.env.VITE_MAESTRO_FOLDER_KEY_ID) 
+        : 2495996;
 
       const requestPayload = {
         processKey: processKey,
@@ -208,11 +223,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       setInvoiceFilePath('Invoice-INV-1025.pdf');
 
       // Refresh invoices list
-      const records = await sdk.entities.getRecordsById(ENTITY_UUID, {
-        pageSize: 100,
-        $orderby: 'UpdateTime desc',
-      });
-      setInvoices(records.items as InvoiceRecord[]);
+      await fetchInvoices(true);
 
     } catch (err) {
       console.group('❌ Error Starting Process');
@@ -518,7 +529,8 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
               invoices={invoices}
               onInvoiceSelect={handleInvoiceSelect}
               selectedInvoiceId={undefined}
-              onRefresh={fetchInvoices}
+              onRefresh={handleRefresh}
+              isRefreshing={refreshing}
               statusFilter={statusFilter}
               onStatusFilterChange={setStatusFilter}
             />
