@@ -90,3 +90,34 @@ export const formatInvoiceIdWithTimestamp = (invoiceId?: string, createTime?: st
   }
 };
 
+
+
+  // Parse email to extract and format name
+  export const formatNameFromEmail = (email: string | undefined): { firstName: string; lastName: string; fullName: string } => {
+    if (!email) {
+      return { firstName: '-', lastName: '', fullName: '-' };
+    }
+
+    // Extract the part before @ symbol
+    const namePart = email.split('@')[0];
+
+    // Split by common delimiters (dot, underscore, dash)
+    const nameParts = namePart.split(/[._-]/);
+
+    // Capitalize first letter of each part
+    const capitalize = (str: string) => {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
+    if (nameParts.length >= 2) {
+      const firstName = capitalize(nameParts[0]);
+      const lastName = capitalize(nameParts[nameParts.length - 1]);
+      return { firstName, lastName, fullName: `${firstName} ${lastName}` };
+    } else if (nameParts.length === 1) {
+      const firstName = capitalize(nameParts[0]);
+      return { firstName, lastName: '', fullName: firstName };
+    }
+
+    return { firstName: email, lastName: '', fullName: email };
+  };

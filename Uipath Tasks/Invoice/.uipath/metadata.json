@@ -1,8 +1,8 @@
 {
   "name": "Invoice",
-  "version": "5.2.0",
-  "description": "invoice",
+  "version": "6.2.0",
+  "description": "modal edits",
   "author": "UiPath Developer",
   "contentType": "webapp",
-  "createdAt": "2025-11-13T19:05:09.562Z"
+  "createdAt": "2025-11-21T18:45:03.349Z"
 }

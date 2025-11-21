@@ -10,6 +10,7 @@ export interface InvoiceRecord {
   invoiceId?: string;
   contractNumber?: string;
   vendorName?: string;
+  userEmail?: string;
   shipmentNumber?: string;
   acceptanceDate?: string;
   invoiceTotal?: number;
@@ -36,13 +37,11 @@ export interface InvoiceMetrics {
 }
 
 export interface MatchEvaluation {
-  field: string;
-  status: string;
-  matchType?: string;
-  details?: string;
-  purchaseOrderValue?: any;
-  invoiceValue?: any;
-  goodsReceiptValue?: any;
+  MismatchType: string;
+  Status: string;
+  Severity: string;
+  Reason: string;
+  Justification: string;
 }
 
 export interface ClinData {

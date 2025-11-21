@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 
 const ENTITY_UUID = '9f8f532a-a6ae-f011-8e61-002248862cce';
 
@@ -9,11 +9,16 @@ export const DebugBox = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
-  
+
   // Processes.getAll state
   const [processesGetAllData, setProcessesGetAllData] = useState<any>(null);
   const [isLoadingProcesses, setIsLoadingProcesses] = useState(false);
   const [processesError, setProcessesError] = useState<string | null>(null);
+
+  // Delete invoices state
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteResult, setDeleteResult] = useState<string | null>(null);
 
   const fetchProcesses = async () => {
     setIsLoading(true);
@@ -96,6 +101,63 @@ export const DebugBox = () => {
       setProcessesError(`${errorMessage} (Check console for details)`);
     } finally {
       setIsLoadingProcesses(false);
+    }
+  };
+
+  const deleteOldestInvoices = async () => {
+    if (!window.confirm('⚠️ WARNING: This will DELETE the 20 oldest invoices (by updateTime). This action cannot be undone. Are you sure?')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+    setDeleteResult(null);
+
+    try {
+      console.group('🗑️ Deleting oldest 20 invoices');
+
+      // Fetch records WITHOUT sorting to get the first 20 (oldest by updateTime)
+      const records = await sdk.entities.getRecordsById(ENTITY_UUID, {
+        pageSize: 20,
+        // No $orderby - this gets the natural order (oldest first)
+      });
+
+      console.log('Fetched records to delete:', records);
+
+      if (!records?.items || records.items.length === 0) {
+        setDeleteResult('No invoices found to delete.');
+        console.log('No items to delete');
+        console.groupEnd();
+        return;
+      }
+
+      const itemsToDelete = records.items;
+      const recordIds = itemsToDelete.map((item: any) => item.id);
+
+      console.log(`Attempting to delete ${recordIds.length} invoices...`);
+      console.log('Record IDs:', recordIds);
+
+      // Delete all records in one call
+      const deleteResponse = await sdk.entities.deleteById(ENTITY_UUID, recordIds);
+
+      console.log('Delete response:', deleteResponse);
+      console.groupEnd();
+
+      const resultMessage = `Successfully deleted ${recordIds.length} invoices.`;
+      setDeleteResult(resultMessage);
+
+      console.log('✅ Deletion summary:', {
+        attempted: recordIds.length,
+        deleted: recordIds.length,
+        response: deleteResponse,
+      });
+
+    } catch (err: any) {
+      console.error('❌ Error during deletion process:', err);
+      const errorMessage = err?.message || 'Failed to delete invoices';
+      setDeleteError(errorMessage);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -314,6 +376,109 @@ export const DebugBox = () => {
                 <li>Run: <code className="bg-gray-100 px-1 py-0.5 rounded text-purple-700 font-mono text-xs">await sdk.processes.getAll()</code></li>
                 <li>Or with folder: <code className="bg-gray-100 px-1 py-0.5 rounded text-purple-700 font-mono text-xs">await sdk.processes.getAll(folderId)</code></li>
               </ol>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-300 my-6"></div>
+
+          {/* Delete Oldest Invoices Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="bg-red-100 rounded-full p-2">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-bold text-lg text-gray-900">Delete Oldest Invoices</h4>
+                <p className="text-sm text-gray-600">⚠️ DANGER: Deletes the 20 oldest invoices (by updateTime)</p>
+              </div>
+            </div>
+
+            <div className="bg-red-50 border-2 border-red-300 rounded-md p-4">
+              <div className="flex items-start space-x-3">
+                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="font-semibold text-red-800 mb-2">Warning: Destructive Action</p>
+                  <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                    <li>This will permanently delete the 20 oldest invoices</li>
+                    <li>Oldest = natural order (earliest updateTime)</li>
+                    <li>No sorting is applied before deletion</li>
+                    <li>This action cannot be undone</li>
+                    <li>Use only in development/testing environments</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <button
+              onClick={deleteOldestInvoices}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center space-x-2"
+            >
+              {isDeleting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Delete 20 Oldest Invoices</span>
+                </>
+              )}
+            </button>
+
+            {/* Success Message */}
+            {deleteResult && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                <div className="flex items-start space-x-2">
+                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <div>
+                    <p className="font-semibold text-green-800">Success</p>
+                    <p className="text-sm text-green-700">{deleteResult}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error Display */}
+            {deleteError && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <div className="flex items-start space-x-2">
+                  <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="font-semibold text-red-800">Error</p>
+                    <pre className="text-sm text-red-700 whitespace-pre-wrap">{deleteError}</pre>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Console Instructions */}
+            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+              <h4 className="font-semibold text-red-800 mb-2 flex items-center space-x-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Console Testing</span>
+              </h4>
+              <p className="text-xs text-gray-700 mb-2">
+                To manually delete records in console:
+              </p>
+              <code className="block bg-gray-100 px-2 py-1 rounded text-red-700 font-mono text-xs overflow-x-auto">
+                await sdk.entities.deleteById('{ENTITY_UUID}', ['record-id-1', 'record-id-2'])
+              </code>
             </div>
           </div>
         </div>

@@ -2,10 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { UiPath, StartStrategy, JobPriority} from '@uipath/uipath-typescript';
 import type { InvoiceRecord, InvoiceMetrics } from '../types/invoices';
 import type { ProcessInstanceExecutionHistoryResponse } from '@uipath/uipath-typescript';
-import { InvoiceGrid } from './InvoiceGrid';
-import { InvoiceDetails } from './InvoiceDetails';
-import { DebugBox } from './DebugBox';
-import { Header } from './Header';
+import { InvoiceGrid } from './invoice/InvoiceGrid';
+import { InvoiceDetails } from './invoice/InvoiceDetails';
+import { DebugBox } from './layout/DebugBox';
+import { Header } from './layout/Header';
+import { KpiCard } from './ui/KpiCard';
+import { StartProcessModal } from './modals/StartProcessModal';
 
 interface DashboardProps {
   sdk: UiPath;
@@ -38,6 +40,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
   }>({ loading: false });
   const [isStartProcessModalOpen, setIsStartProcessModalOpen] = useState(false);
   const [invoiceFilePath, setInvoiceFilePath] = useState('Invoice-INV-1025.pdf');
+  const [sendToEmail, setSendToEmail] = useState('');
   const [isStartingProcess, setIsStartingProcess] = useState(false);
   const [startProcessError, setStartProcessError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -185,10 +188,11 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       const requestPayload = {
         processKey: processKey,
         strategy: StartStrategy.ModernJobsCount,
-        runAsMe: true, 
+        runAsMe: true,
         jobPriority: JobPriority.Normal,
         inputArguments: JSON.stringify({
-          invoiceFilePath: invoiceFilePath,
+          InvoiceFilePath: invoiceFilePath,
+          SendToEmail: sendToEmail,
         }),
         requiresUserInteraction: false,
       };
@@ -197,6 +201,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       console.log('Process Key:', processKey);
       console.log('Folder ID:', folderId);
       console.log('Invoice File Path:', invoiceFilePath);
+      console.log('Send To Email:', sendToEmail);
       console.log('Request Payload:', requestPayload);
       console.log('Full Request:', {
         payload: requestPayload,
@@ -221,6 +226,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       // Close modal and reset
       setIsStartProcessModalOpen(false);
       setInvoiceFilePath('Invoice-INV-1025.pdf');
+      setSendToEmail('');
 
       // Refresh invoices list
       await fetchInvoices(true);
@@ -299,19 +305,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
   }
 
   const statCards = [
-    {
-      title: 'Total Invoices',
-      value: metrics.totalInvoices,
-      icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-      color: 'bg-uipath-orange',
-      textColor: 'text-uipath-orange',
-      bgColor: 'bg-white',
-      description: 'All invoices in the system',
-    },
+
    
     {
       title: 'Pending Review',
@@ -325,6 +319,39 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       textColor: 'text-yellow-600',
       bgColor: 'bg-white',
       description: 'Invoices awaiting review',
+    },
+        {
+      title: 'High Severity Failed Checks',
+      value: '5%',
+      customContent: (
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-1">High Severity Failed Checks</p>
+          <div className="flex items-end gap-3 mb-2">
+            <p className="text-3xl font-bold text-green-600">5%</p>
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-lg text-gray-400 line-through">30%</span>
+              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+          </div>
+          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+            </svg>
+            83% reduction
+          </div>
+        </div>
+      ),
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      ),
+      color: 'bg-uipath-orange',
+      textColor: 'text-uipath-orange',
+      bgColor: 'bg-white',
+      description: '% of invoices with critical validation failures',
     },
      {
       title: 'Total Invoice Value',
@@ -435,75 +462,27 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((card, index) => (
-          <div
+          <KpiCard
             key={index}
-            onClick={() => {
-              if (card.title === 'Pending Review') {
-                setStatusFilter('Pending Review');
-              }
-            }}
-            className={`${card.bgColor} rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow ${
-              card.title === 'Pending Review' ? 'cursor-pointer hover:border-yellow-400' : ''
-            }`}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                {(card as any).customContent ? (
-                  (card as any).customContent
-                ) : (
-                  <>
-                    <p className={`text-sm font-medium ${card.textColor} mb-1`}>{card.title}</p>
-                    <p className="text-3xl font-bold text-gray-900 mb-2">{card.value}</p>
-                    <p className="text-xs text-gray-500">{card.description}</p>
-                  </>
-                )}
-              </div>
-              <div className={card.textColor}>{card.icon}</div>
-            </div>
-          </div>
+            title={card.title}
+            value={card.value}
+            icon={card.icon}
+            color={card.color}
+            textColor={card.textColor}
+            bgColor={card.bgColor}
+            description={card.description}
+            customContent={(card as any).customContent}
+            onClick={
+              card.title === 'Pending Review'
+                ? () => setStatusFilter('Pending Review')
+                : undefined
+            }
+            isClickable={card.title === 'Pending Review'}
+          />
         ))}
       </div>
 
-      {/* Info Banner */}
-      {/* <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div className="ml-3 flex-1">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-blue-800">Processing Tips</h3>
-              <button
-                onClick={() => setTipsCollapsed(!tipsCollapsed)}
-                className="text-blue-600 hover:text-blue-800 transition-colors"
-                aria-label={tipsCollapsed ? "Expand tips" : "Collapse tips"}
-              >
-                <svg
-                  className="h-5 w-5 transform transition-transform"
-                  style={{ transform: tipsCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
-            {!tipsCollapsed && (
-              <div className="mt-2 text-sm text-blue-700">
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Pending Review invoices require attention within 24 hours</li>
-                  <li>Click "View Details" to see full invoice information</li>
-                  <li>Approved invoices are ready for payment processing</li>
-                  <li>Check invoice totals and vendor information regularly</li>
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      </div> */}
+
 
       {/* Invoice Management Section */}
       <div>
@@ -524,7 +503,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
         {!selectedInvoice ? (
             /* Grid View - Full Width */
             
-          <div className="overflow-y-auto bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+          <div className=" glass overflow-y-auto bg-white rounded-lg border border-gray-200 shadow-sm p-5">
             <InvoiceGrid
               invoices={invoices}
               onInvoiceSelect={handleInvoiceSelect}
@@ -537,7 +516,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
           </div>
         ) : (
           /* Detail View - Full Width with Breadcrumb */
-          <div className="overflow-y-auto bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="glass overflow-y-auto bg-white rounded-lg border border-gray-200 shadow-sm">
             {/* Breadcrumb */}
             <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
               <button
@@ -553,6 +532,7 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
             <InvoiceDetails
               selectedInvoice={selectedInvoice}
               processDetails={processDetails}
+              sdk={sdk}
               onRefreshData={() => {
                 if (selectedInvoice) {
                   fetchProcessDetails(selectedInvoice);
@@ -564,99 +544,20 @@ export const Dashboard = ({ sdk }: DashboardProps) => {
       </div>
 
       {/* Start Process Modal */}
-      {isStartProcessModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-[500px] max-w-[90vw]">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </div>
-                Start Invoice Processing
-              </h3>
-              <button
-                onClick={() => {
-                  setIsStartProcessModalOpen(false);
-                  setStartProcessError(null);
-                }}
-                className="text-gray-400 hover:text-gray-500 transition-colors"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="mb-6">
-                <label htmlFor="invoiceFilePath" className="block text-sm font-medium text-gray-700 mb-2">
-                  Invoice File Path
-                </label>
-                <input
-                  id="invoiceFilePath"
-                  type="text"
-                  value={invoiceFilePath}
-                  onChange={(e) => setInvoiceFilePath(e.target.value)}
-                  placeholder="e.g., Invoice-INV-1025.pdf"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-colors"
-                />
-                <p className="mt-2 text-xs text-gray-500">
-                  Enter the file path or name of the invoice to process
-                </p>
-              </div>
-
-              {startProcessError && (
-                <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 rounded">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">{startProcessError}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setIsStartProcessModalOpen(false);
-                    setStartProcessError(null);
-                  }}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                  disabled={isStartingProcess}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleStartProcess}
-                  disabled={isStartingProcess}
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isStartingProcess ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      Starting...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                      Start Process
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <StartProcessModal
+        isOpen={isStartProcessModalOpen}
+        onClose={() => {
+          setIsStartProcessModalOpen(false);
+          setStartProcessError(null);
+        }}
+        invoiceFilePath={invoiceFilePath}
+        setInvoiceFilePath={setInvoiceFilePath}
+        sendToEmail={sendToEmail}
+        setSendToEmail={setSendToEmail}
+        onSubmit={handleStartProcess}
+        isLoading={isStartingProcess}
+        error={startProcessError}
+      />
     </div>
     </div>
   );

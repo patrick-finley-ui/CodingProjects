@@ -1,7 +1,11 @@
 import { useAuth } from '../hooks/useAuth';
+import { getLogoUrls } from '../utils/logoUtils';
+import { LoginInstructions } from './ui/LoginInstructions';
 
 export const LoginScreen = () => {
   const { login, error, isLoading } = useAuth();
+  const { dodLogoSrc, uipathLogoSrc } = getLogoUrls();
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
@@ -10,10 +14,15 @@ export const LoginScreen = () => {
           {/* Logo and Title */}
           <div className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="bg-uipath-orange-subtle p-4 rounded-full">
-                <svg className="w-12 h-12 text-uipath-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+              <div className="bg-white p-4 rounded-full">
+                
+               <div className="flex items-center">
+            <img
+              src={uipathLogoSrc}
+              alt="UiPath"
+              className="h-28 w-auto object-contain"
+            />
+          </div>
               </div>
             </div>
             <h2 className="text-3xl font-bold text-gray-900">Invoice Processing App</h2>
@@ -59,13 +68,27 @@ export const LoginScreen = () => {
               </>
             )}
           </button>
-
+<div className="flex justify-center mb-4">
+              <div className="bg-white p-4 rounded-full">
+                
+               <div className="flex items-center">
+            <img
+              src={dodLogoSrc}
+              alt="Department of Defense"
+              className="h-28 w-auto object-contain"
+            />
+          </div>
+              </div>
+            </div>
           {/* Footer Info */}
           <div className="text-center text-xs text-gray-500 pt-4 border-t border-gray-100">
             <p>Powered by UiPath TypeScript SDK</p>
             <p className="mt-1">Secure access for authorized users only</p>
           </div>
         </div>
+
+        {/* Login Instructions - Collapsible */}
+        <LoginInstructions />
 
         {/* Additional Info */}
         <div className="mt-6 text-center">

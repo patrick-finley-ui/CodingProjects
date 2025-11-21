@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
-import type { InvoiceRecord } from '../types/invoices';
-import { formatCurrency, formatDate, getStatusColor, formatInvoiceIdWithTimestamp } from '../utils/formatters';
+import type { InvoiceRecord } from '../../types/invoices';
+import { formatCurrency, formatDate, getStatusColor, formatInvoiceIdWithTimestamp, formatNameFromEmail } from '../../utils/formatters';
 
-type SortField = 'invoiceId' | 'vendorName' | 'invoiceTotal' | 'status' | 'acceptanceDate' | 'updateTime';
+type SortField = 'invoiceId' | 'userEmail' | 'invoiceTotal' | 'status' | 'acceptanceDate' | 'updateTime';
 type SortDirection = 'asc' | 'desc';
 
 interface InvoiceGridProps {
@@ -20,6 +20,22 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [filterStatus, setFilterStatus] = useState<string>(statusFilter || 'All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  // Hardcoded process definition key - same as in InvoiceDetails
+  const PROCESS_DEFINITION_KEY = import.meta.env.VITE_MAESTRO_PROCESS_KEY;
+
+  const openMaestroProcess = (invoice: InvoiceRecord, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row selection when clicking the button
+    if (!invoice.maestroProcessKey || !invoice.folderId) {
+      console.error('Missing maestroProcessKey or folderId');
+      return;
+    }
+
+    const url = `https://staging.uipath.com/uipathlabs/Playground/maestro_/processes/${PROCESS_DEFINITION_KEY}/instances/${invoice.maestroProcessKey}?folderKey=${invoice.folderId}`;
+    window.open(url, '_blank');
+  };
 
   // Update internal state when prop changes
   useEffect(() => {
@@ -58,7 +74,7 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(inv =>
         (inv.invoiceId?.toLowerCase().includes(query)) ||
-        (inv.vendorName?.toLowerCase().includes(query)) ||
+        (inv.userEmail?.toLowerCase().includes(query)) ||
         (inv.contractNumber?.toLowerCase().includes(query)) ||
         (inv.shipmentNumber?.toLowerCase().includes(query))
       );
@@ -87,6 +103,36 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
 
     return sorted;
   }, [invoices, filterStatus, searchQuery, sortField, sortDirection]);
+
+  // Reset to page 1 when filters, search, or sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, searchQuery, sortField, sortDirection]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAndSortedInvoices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedInvoices = filteredAndSortedInvoices.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
@@ -177,7 +223,10 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
 
       {/* Results count */}
       <div className="text-sm text-gray-600">
-        Showing {filteredAndSortedInvoices.length} of {invoices.length} invoices
+        Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedInvoices.length)} of {filteredAndSortedInvoices.length} invoices
+        {filteredAndSortedInvoices.length !== invoices.length && (
+          <span className="text-gray-500"> (filtered from {invoices.length} total)</span>
+        )}
       </div>
 
       {/* Table */}
@@ -211,12 +260,12 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('vendorName')}
-                  aria-sort={sortField === 'vendorName' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  onClick={() => handleSort('userEmail')}
+                  aria-sort={sortField === 'userEmail' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
                   <div className="flex items-center gap-1">
-                    Vendor Name
-                    <SortIcon field="vendorName" />
+                    Vendor Contact
+                    <SortIcon field="userEmail" />
                   </div>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -253,12 +302,15 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
                     <SortIcon field="updateTime" />
                   </div>
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Maestro
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAndSortedInvoices.length === 0 ? (
+              {paginatedInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={9} className="px-6 py-12 text-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-uipath-orange-subtle mb-4">
                       <svg className="h-8 w-8 text-uipath-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -273,7 +325,7 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
                   </td>
                 </tr>
               ) : (
-                filteredAndSortedInvoices.map((invoice) => (
+                paginatedInvoices.map((invoice) => (
                   <tr
                     key={invoice.id}
                     onClick={() => onInvoiceSelect?.(invoice)}
@@ -295,7 +347,21 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
                       {invoice.contractNumber || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {invoice.vendorName || '-'}
+                      {invoice.userEmail ? (
+                        <div className="relative group inline-block">
+                          <span className="cursor-help">
+                            {formatNameFromEmail(invoice.userEmail).fullName}
+                          </span>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-10 pointer-events-none">
+                            {invoice.userEmail}
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                              <div className="border-4 border-transparent border-t-gray-900"></div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        '-'
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {invoice.shipmentNumber || '-'}
@@ -306,9 +372,25 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                       {formatCurrency(invoice.invoiceTotal)}
                     </td>
-                 
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(invoice.updateTime)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {invoice.maestroProcessKey && invoice.folderId ? (
+                        <button
+                          onClick={(e) => openMaestroProcess(invoice, e)}
+                          className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-all duration-200 hover:shadow-md"
+                          title="Open in Maestro"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 13a5 5 0 007.42.8l.13-.13a5 5 0 000-7.08 5.01 5.01 0 00-7.07-.01l-3 3"/>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 11a5 5 0 00-7.42-.8l-.13.13a5 5 0 000 7.08 5.01 5.01 0 007.07.01l3-3"/>
+                          </svg>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 text-xs">-</span>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -317,6 +399,109 @@ export const InvoiceGrid = ({ invoices, onInvoiceSelect, selectedInvoiceId, onRe
           </table>
         </div>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200 shadow-sm">
+          {/* Left side - Page info */}
+          <div className="flex items-center text-sm text-gray-700">
+            <span>
+              Page <span className="font-medium">{currentPage}</span> of{' '}
+              <span className="font-medium">{totalPages}</span>
+            </span>
+          </div>
+
+          {/* Center - Page navigation */}
+          <div className="flex items-center gap-2">
+            {/* Previous button */}
+            <button
+              onClick={goToPreviousPage}
+              disabled={currentPage === 1}
+              className="p-2 rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+              aria-label="Previous page"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {/* First page */}
+              {currentPage > 3 && (
+                <>
+                  <button
+                    onClick={() => goToPage(1)}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    1
+                  </button>
+                  {currentPage > 4 && (
+                    <span className="px-2 text-gray-500">...</span>
+                  )}
+                </>
+              )}
+
+              {/* Pages around current */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  return (
+                    page === currentPage ||
+                    page === currentPage - 1 ||
+                    page === currentPage + 1 ||
+                    (page === currentPage - 2 && currentPage <= 3) ||
+                    (page === currentPage + 2 && currentPage >= totalPages - 2)
+                  );
+                })
+                .map(page => (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      page === currentPage
+                        ? 'bg-uipath-orange text-white'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+              {/* Last page */}
+              {currentPage < totalPages - 2 && (
+                <>
+                  {currentPage < totalPages - 3 && (
+                    <span className="px-2 text-gray-500">...</span>
+                  )}
+                  <button
+                    onClick={() => goToPage(totalPages)}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Next button */}
+            <button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+              aria-label="Next page"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Right side - Items per page info */}
+          <div className="text-sm text-gray-700">
+            <span className="font-medium">{itemsPerPage}</span> per page
+          </div>
+        </div>
+      )}
     </div>
   );
 };
